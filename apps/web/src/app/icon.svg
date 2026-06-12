@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <!-- DevRadar D-sweep mark, simplified for favicon sizes -->
+  <!-- DevRadar eye mark, simplified for favicon sizes -->
   <defs>
     <linearGradient id="g" x1="0" y1="0" x2="0.78" y2="1">
       <stop offset="0" stop-color="#F4D789"/>
@@ -8,11 +8,8 @@
     </linearGradient>
   </defs>
   <rect width="64" height="64" rx="14" fill="#060607"/>
-  <path fill-rule="evenodd" fill="url(#g)" d="
-    M14,12 L31,12 A20,20 0 0 1 31,52 L14,52 Z
-    M21.5,21 L30,21 A11,11 0 0 1 30,43 L21.5,43 Z"/>
-  <line x1="30" y1="32" x2="53" y2="9" stroke="#060607" stroke-width="3.2" opacity="0.6"/>
-  <line x1="30" y1="32" x2="53" y2="9" stroke="#F4D789" stroke-width="1.9"/>
-  <circle cx="30" cy="32" r="2.8" fill="#F4D789"/>
-  <circle cx="46.5" cy="15.5" r="2.3" fill="#5CDD94"/>
+  <path d="M8,32 Q32,11 56,32 Q32,53 8,32 Z" fill="none" stroke="url(#g)" stroke-width="3.6"/>
+  <circle cx="32" cy="32" r="10.5" fill="none" stroke="#E2B65B" stroke-width="1.6" opacity="0.55"/>
+  <circle cx="32" cy="32" r="6.6" fill="url(#g)"/>
+  <circle cx="34.4" cy="29.6" r="1.9" fill="#060607" opacity="0.85"/>
 </svg>
