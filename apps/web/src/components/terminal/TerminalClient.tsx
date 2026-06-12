@@ -25,6 +25,7 @@ import { useLiveFeed } from '@/lib/client/useLiveFeed';
 import { useMe } from '@/lib/client/useMe';
 import { signInWithSolana, WalletError } from '@/lib/client/wallet';
 import { PayModal } from '@/components/PayModal';
+import { BrandGlyph } from '@/components/BrandGlyph';
 import { TelegramLinkModal } from '@/components/TelegramLinkModal';
 import { DossierPanel, type DossierState } from './DossierPanel';
 
@@ -397,7 +398,7 @@ function Terminal(): JSX.Element {
           ←
         </Link>
         <Link href="/" className="logo" style={{ cursor: 'pointer' }}>
-          <span className="glyph" aria-hidden="true" />
+          <BrandGlyph />
           <span className="wordmark">
             DEV<em>RADAR</em>
           </span>

@@ -14,6 +14,7 @@ import { ToastProvider } from '@/lib/client/toast';
 import { useLiveFeed } from '@/lib/client/useLiveFeed';
 import { useMe } from '@/lib/client/useMe';
 import { PayModal } from '@/components/PayModal';
+import { BrandGlyph } from '@/components/BrandGlyph';
 import type { LpProfile } from './profiles';
 
 function useReducedMotion(): boolean {
@@ -239,7 +240,7 @@ export function LandingClient({ profiles }: { profiles: LpProfile[] }): JSX.Elem
         <nav ref={navRef}>
           <div className="nav-in">
             <Link className="logo" href="/" aria-label="DevRadar home">
-              <span className="glyph" aria-hidden="true" />
+              <BrandGlyph />
               <span className="wordmark">
                 DEV<em>RADAR</em>
               </span>
@@ -787,7 +788,7 @@ export function LandingClient({ profiles }: { profiles: LpProfile[] }): JSX.Elem
             <div className="foot-grid">
               <div className="foot-brand">
                 <Link className="logo" href="/">
-                  <span className="glyph" aria-hidden="true" />
+                  <BrandGlyph />
                   <span className="wordmark">
                     DEV<em>RADAR</em>
                   </span>
