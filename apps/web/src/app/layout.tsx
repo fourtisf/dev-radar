@@ -2,9 +2,23 @@ import type { Metadata, Viewport } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.APP_URL ?? 'https://devradar.org'),
   title: 'DevRadar — Deployer Intelligence for Solana',
   description:
     'Every dev has a record. DevRadar compiles it in under two seconds — launches, rugs, bundles, funding — before your entry.',
+  openGraph: {
+    title: 'DevRadar — Deployer Intelligence for Solana',
+    description:
+      'Every deployer wallet carries a record — launches, rugs, bundles, funding. Compiled into one dossier in under two seconds.',
+    url: '/',
+    siteName: 'DevRadar',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary',
+    title: 'DevRadar — Deployer Intelligence for Solana',
+    description: 'Know the dev before you ape.',
+  },
 };
 
 export const viewport: Viewport = {
