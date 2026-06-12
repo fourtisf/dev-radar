@@ -29,7 +29,7 @@ cp deploy/nginx/devradar.conf /etc/nginx/sites-available/devradar.conf
 #   → replace server_name devradar.example with the real domain
 ln -s /etc/nginx/sites-available/devradar.conf /etc/nginx/sites-enabled/
 nginx -t && systemctl reload nginx
-certbot --nginx -d <domain>                # adds the 443 block + redirect
+certbot --nginx -d devradar.org -d www.devradar.org                # adds the 443 block + redirect
 
 # 6) point the Helius webhook at https://<domain>/webhook/helius
 #    with the Authorization header set to HELIUS_WEBHOOK_SECRET,
