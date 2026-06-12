@@ -1,0 +1,22 @@
+# deps
+node_modules/
+.pnpm-store/
+
+# env
+.env
+.env.local
+.env.*.local
+
+# builds
+apps/web/.next/
+apps/web/out/
+dist/
+*.tsbuildinfo
+
+# prisma
+packages/db/prisma/migrations/dev.db*
+
+# misc
+.DS_Store
+*.log
+coverage/

@@ -1,0 +1,17 @@
+import { z } from 'zod';
+
+const schema = z.object({
+  DATABASE_URL: z.string().min(1),
+  REDIS_URL: z.string().min(1).default('redis://localhost:6379'),
+  HELIUS_API_KEY: z.string().default(''),
+  HELIUS_WEBHOOK_SECRET: z.string().default(''),
+  TELEGRAM_BOT_TOKEN: z.string().default(''),
+  TREASURY_WALLET: z.string().default(''),
+  JWT_SECRET: z.string().default(''),
+  APP_URL: z.string().default('http://localhost:3000'),
+  WORKER_PORT: z.coerce.number().default(8787),
+  NODE_ENV: z.string().default('development'),
+});
+
+export const env = schema.parse(process.env);
+export type Env = typeof env;

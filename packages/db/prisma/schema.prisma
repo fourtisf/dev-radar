@@ -1,0 +1,133 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Verdict {
+  WINNER
+  RUGGER
+  FRESH
+  NEUTRAL
+}
+
+enum Outcome {
+  LIVE
+  CLEAN
+  RUG
+  DEAD
+}
+
+enum Tier {
+  SCOUT
+  OPERATOR
+  SYNDICATE
+}
+
+enum FundType {
+  CEX_CLEAN
+  UNVERIFIED
+  MIXER
+  LINKED_FLAGGED
+}
+
+enum SnipeLvl {
+  LOW
+  MED
+  HIGH
+}
+
+model Dev {
+  wallet          String    @id
+  firstSeenAt     DateTime
+  verdict         Verdict   @default(FRESH)
+  confidence      Int       @default(50) // 0–100
+  launchCount     Int       @default(0)
+  rugCount        Int       @default(0)
+  cleanCount      Int       @default(0)
+  bestAthUsd      Decimal   @default(0)
+  medianLifespanS Int       @default(0)
+  fundingType     FundType  @default(UNVERIFIED)
+  fundingPath     Json? // [{wallet,label,hop,sol,ts}]
+  flagged         Boolean   @default(false) // confirmed rugger cluster
+  backfilledAt    DateTime?
+  updatedAt       DateTime  @updatedAt
+  tokens          Token[]
+}
+
+model Token {
+  mint        String   @id
+  devWallet   String
+  dev         Dev      @relation(fields: [devWallet], references: [wallet])
+  name        String
+  symbol      String
+  venue       String   @default("pumpfun")
+  createdAt   DateTime
+  bundlePct   Decimal  @default(0)
+  sniperLvl   SnipeLvl @default(LOW)
+  drScore     Int      @default(50)
+  outcome     Outcome  @default(LIVE)
+  peakMcapUsd Decimal  @default(0)
+  lifespanS   Int      @default(0)
+
+  @@index([createdAt(sort: Desc)])
+  @@index([devWallet])
+}
+
+model TokenSnapshot {
+  id      BigInt   @id @default(autoincrement())
+  mint    String
+  ts      DateTime @default(now())
+  mcapUsd Decimal
+  liqUsd  Decimal
+
+  @@index([mint, ts])
+}
+
+model KnownAddress {
+  address String @id
+  label   String // "Binance 8", "FixedFloat", ...
+  type    String // cex | mixer | flagged
+}
+
+model User {
+  id          String    @id @default(cuid())
+  wallet      String    @unique
+  tier        Tier      @default(SCOUT)
+  tierExpires DateTime?
+  tgChatId    String?   @unique
+  tgLinkCode  String?   @unique
+  alertPrefs  Json      @default("{\"winnerOnly\":true}")
+  createdAt   DateTime  @default(now())
+  watchlist   Watch[]
+}
+
+model Watch {
+  userId    String
+  devWallet String
+  user      User   @relation(fields: [userId], references: [id])
+
+  @@id([userId, devWallet])
+}
+
+model Payment {
+  signature  String   @id
+  wallet     String
+  amountSol  Decimal
+  tier       Tier
+  verifiedAt DateTime @default(now())
+}
+
+// Payments to the treasury that could not be matched to a user
+// (missing/garbled memo). Held for manual review — see Section 11
+// of the handoff spec.
+model PaymentUnmatched {
+  signature  String   @id
+  fromWallet String
+  amountSol  Decimal
+  memo       String?
+  seenAt     DateTime @default(now())
+}

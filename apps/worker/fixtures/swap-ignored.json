@@ -1,0 +1,28 @@
+[
+  {
+    "signature": "5KqWSwapFAKEsigSwap1xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx4",
+    "slot": 312345730,
+    "timestamp": 1781179380,
+    "type": "SWAP",
+    "source": "PUMP_FUN",
+    "fee": 5000,
+    "feePayer": "SomeTraderWALLETxxxxxxxxxxxxxxxxxxxxxxxxxxx5",
+    "description": "SomeTrader swapped 1 SOL for 1200000 GIGABRAIN",
+    "instructions": [
+      {
+        "programId": "6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P",
+        "accounts": [],
+        "data": "swapdata"
+      }
+    ],
+    "tokenTransfers": [
+      {
+        "fromUserAccount": "pool",
+        "toUserAccount": "SomeTraderWALLETxxxxxxxxxxxxxxxxxxxxxxxxxxx5",
+        "mint": "GiGABRA1NM1NTxxxxxxxxxxxxxxxxxxxxxxxxxxx1111",
+        "tokenAmount": 1200000
+      }
+    ],
+    "events": {}
+  }
+]

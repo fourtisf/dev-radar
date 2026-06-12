@@ -1,0 +1,1590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>DevRadar — Deployer Intelligence for Solana</title>
+<meta name="description" content="Every dev has a record. DevRadar compiles it in under two seconds — launches, rugs, bundles, funding — before your entry." />
+<link rel="preconnect" href="https://api.fontshare.com" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://api.fontshare.com/v2/css?f[]=clash-display@500,600&f[]=switzer@400,500,600&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+/* ============================================================
+   TOKENS + BASE (shared)
+============================================================ */
+:root{
+  --black:#060607; --black-2:#0A0A0C;
+  --panel:rgba(255,255,255,0.024); --panel-2:rgba(255,255,255,0.045);
+  --hairline:rgba(255,255,255,0.07); --hairline-2:rgba(255,255,255,0.13);
+  --gold:#E2B65B; --gold-hi:#F4D789; --gold-deep:#B9893A;
+  --gold-06:rgba(226,182,91,0.06); --gold-12:rgba(226,182,91,0.12); --gold-30:rgba(226,182,91,0.30);
+  --white:#F4F2EC; --grey:#9C9A93; --grey-2:#5F5D58;
+  --win:#5CDD94; --rug:#F2555C;
+  --display:'Clash Display',sans-serif; --body:'Switzer',sans-serif; --mono:'Geist Mono',monospace;
+  --max:1200px; --pad:clamp(20px,4.5vw,48px); --r:20px;
+  --ease:cubic-bezier(.16,1,.3,1);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:96px}
+body{
+  background:var(--black);color:var(--grey);
+  font-family:var(--body);font-size:16.5px;line-height:1.7;
+  -webkit-font-smoothing:antialiased;overflow-x:hidden;
+}
+body.app{overflow:hidden;height:100dvh}
+::selection{background:rgba(226,182,91,.28);color:var(--white)}
+a{color:inherit;text-decoration:none}
+button{font-family:inherit;cursor:pointer;border:0;background:none;color:inherit}
+a:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-offset:3px;border-radius:6px}
+
+body::after{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:90;opacity:.032;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.wrap{max-width:var(--max);margin:0 auto;padding-left:var(--pad);padding-right:var(--pad)}
+.section{padding:clamp(96px,11vw,168px) 0;position:relative}
+
+h1,h2,h3{font-family:var(--display);color:var(--white);font-weight:500}
+h1{font-size:clamp(46px,7vw,96px);line-height:1.0;letter-spacing:-.022em}
+h2{font-size:clamp(34px,4.4vw,58px);line-height:1.04;letter-spacing:-.018em}
+h3{font-size:20px;line-height:1.3;font-weight:500}
+.lede{font-size:clamp(16.5px,1.4vw,19px);line-height:1.75;max-width:56ch}
+.goldtx{background:linear-gradient(120deg,var(--gold-hi),var(--gold) 50%,var(--gold-deep));-webkit-background-clip:text;background-clip:text;color:transparent}
+.label{
+  font-family:var(--mono);font-size:11px;font-weight:500;letter-spacing:.26em;text-transform:uppercase;color:var(--gold);
+  display:inline-flex;align-items:center;gap:10px;
+}
+.label::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--gold);box-shadow:0 0 12px rgba(226,182,91,.8)}
+
+.rv{opacity:0;transform:translateY(28px);filter:blur(7px);transition:opacity .9s var(--ease),transform .9s var(--ease),filter .9s var(--ease)}
+.rv.in{opacity:1;transform:none;filter:none}
+
+/* shared verdict chip / score / prior / stat */
+.verdict{
+  display:inline-flex;align-items:center;gap:8px;flex:none;
+  font-family:var(--mono);font-size:10px;font-weight:500;letter-spacing:.16em;text-transform:uppercase;
+  padding:7px 13px;border-radius:100px;border:1px solid;white-space:nowrap;
+}
+.verdict .vd{width:5px;height:5px;border-radius:50%;background:currentColor;box-shadow:0 0 9px currentColor}
+.verdict.win{color:var(--win);border-color:rgba(92,221,148,.3);background:rgba(92,221,148,.06)}
+.verdict.rug{color:var(--rug);border-color:rgba(242,85,92,.3);background:rgba(242,85,92,.06)}
+.verdict.fresh{color:var(--gold);border-color:var(--gold-30);background:var(--gold-06)}
+.score{font-family:var(--mono);font-weight:600;font-size:13px}
+.score.hi{color:var(--win)}.score.mid{color:var(--gold)}.score.lo{color:var(--rug)}
+.prior{
+  display:flex;justify-content:space-between;align-items:center;gap:10px;
+  font-family:var(--mono);font-size:11.5px;padding:10px 2px;border-bottom:1px solid var(--hairline);
+}
+.prior:last-child{border-bottom:0}
+.prior .t{color:var(--white)}.prior .m{color:var(--grey-2);font-size:10.5px}
+.prior .o{font-size:9.5px;letter-spacing:.14em;font-weight:500}
+.prior .o.win{color:var(--win)}.prior .o.rug{color:var(--rug)}.prior .o.live{color:var(--gold)}
+.ds{padding:13px 4px 11px;text-align:center;border-radius:12px;background:rgba(255,255,255,.025)}
+.ds .k{font-family:var(--mono);font-size:8px;letter-spacing:.16em;color:var(--grey-2);text-transform:uppercase}
+.ds .v{font-family:var(--display);font-size:19px;font-weight:500;color:var(--white);margin-top:5px}
+.ds .v.good{color:var(--win)}.ds .v.bad{color:var(--rug)}
+
+/* buttons */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:9px;
+  font-family:var(--mono);font-size:12px;font-weight:500;letter-spacing:.16em;text-transform:uppercase;
+  padding:16px 30px;border-radius:100px;white-space:nowrap;
+  transition:transform .25s var(--ease),box-shadow .35s,border-color .25s,color .25s,background .25s;
+}
+.btn-gold{position:relative;overflow:hidden;color:#141007;background:linear-gradient(135deg,var(--gold-hi),var(--gold) 55%,var(--gold-deep) 130%)}
+.btn-gold::after{content:"";position:absolute;top:0;left:-70%;width:50%;height:100%;
+  background:linear-gradient(105deg,transparent,rgba(255,255,255,.55),transparent);transform:skewX(-18deg);transition:left .6s var(--ease)}
+.btn-gold:hover{transform:translateY(-2px);box-shadow:0 18px 44px -14px rgba(226,182,91,.55)}
+.btn-gold:hover::after{left:135%}
+.btn-line{color:var(--white);border:1px solid var(--hairline-2);background:rgba(255,255,255,.02);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+.btn-line:hover{border-color:var(--gold-30);color:var(--gold);transform:translateY(-2px)}
+.btn-sm{padding:12px 22px;font-size:11px}
+.btn-icon{padding:10px 12px;border-radius:12px;border:1px solid var(--hairline);color:var(--grey);font-size:12px;letter-spacing:0}
+.btn-icon:hover{border-color:var(--gold-30);color:var(--gold)}
+.btn-icon.on{border-color:var(--gold-30);color:var(--gold);background:var(--gold-06)}
+
+/* glyph */
+.glyph{
+  width:28px;height:28px;border-radius:50%;position:relative;flex:none;
+  border:1px solid var(--gold-30);background:radial-gradient(circle,var(--gold-06),transparent 70%);overflow:hidden;
+}
+.glyph::before{content:"";position:absolute;inset:0;border-radius:50%;
+  background:conic-gradient(from 0deg,rgba(226,182,91,.75),transparent 65deg);animation:sweep 4s linear infinite}
+.glyph::after{content:"";position:absolute;top:50%;left:50%;width:4px;height:4px;border-radius:50%;
+  background:var(--gold-hi);transform:translate(-50%,-50%);box-shadow:0 0 10px var(--gold)}
+@keyframes sweep{to{transform:rotate(360deg)}}
+.wordmark{font-family:var(--display);font-weight:600;font-size:16px;letter-spacing:.1em;color:var(--white)}
+.wordmark em{font-style:normal;color:var(--gold)}
+
+.scroll{scrollbar-width:thin;scrollbar-color:rgba(226,182,91,.25) transparent}
+.scroll::-webkit-scrollbar{width:8px}
+.scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,.08);border-radius:8px}
+.scroll::-webkit-scrollbar-thumb:hover{background:rgba(226,182,91,.3)}
+
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+
+/* ============================================================
+   VIEW SWITCH
+============================================================ */
+#view-terminal{display:none}
+body.app #view-landing{display:none}
+body.app #view-terminal{display:flex;flex-direction:column;height:100dvh}
+
+/* ============================================================
+   LANDING — NAV
+============================================================ */
+nav{position:fixed;top:0;left:0;right:0;z-index:70;border-bottom:1px solid transparent;
+  transition:background .4s,border-color .4s}
+nav.scrolled{background:rgba(6,6,7,.72);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);border-color:var(--hairline)}
+body.app nav{display:none}
+.nav-in{max-width:var(--max);margin:0 auto;padding:0 var(--pad);height:76px;display:flex;align-items:center;justify-content:space-between;gap:24px}
+.logo{display:flex;align-items:center;gap:12px}
+.nav-links{display:flex;gap:36px;align-items:center}
+.nav-links a{font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--grey);transition:color .25s}
+.nav-links a:hover{color:var(--gold)}
+
+/* ============================================================
+   LANDING — HERO
+============================================================ */
+.hero{position:relative;padding-top:clamp(150px,19vh,220px);padding-bottom:clamp(70px,9vw,130px)}
+.hero-rings{
+  position:absolute;top:50%;right:-24%;transform:translateY(-52%);
+  width:min(1150px,130vw);aspect-ratio:1;border-radius:50%;pointer-events:none;
+  background:repeating-radial-gradient(circle at center,transparent 0 118px,rgba(255,255,255,.05) 118px 119px);
+  -webkit-mask:radial-gradient(circle,#000 25%,transparent 70%);mask:radial-gradient(circle,#000 25%,transparent 70%);
+}
+.hero-rings::after{content:"";position:absolute;inset:0;border-radius:50%;
+  background:conic-gradient(from 0deg,rgba(226,182,91,.10),transparent 60deg);animation:sweep 16s linear infinite}
+.hero-glow{position:absolute;top:-260px;right:-160px;width:980px;height:980px;pointer-events:none;
+  background:radial-gradient(circle,rgba(226,182,91,.13),transparent 58%);filter:blur(50px)}
+.hero-grid{position:relative;z-index:2;display:grid;grid-template-columns:minmax(0,1.04fr) minmax(0,.96fr);gap:clamp(48px,6vw,90px);align-items:center}
+.hero h1{margin:30px 0 28px}
+.hero .lede{margin-bottom:42px}
+
+.scanbar{
+  display:flex;align-items:stretch;max-width:560px;border-radius:100px;padding:6px;gap:6px;
+  border:1px solid var(--hairline-2);background:rgba(255,255,255,.025);
+  -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
+  transition:border-color .3s,box-shadow .3s;
+}
+.scanbar:focus-within{border-color:var(--gold-30);box-shadow:0 0 0 4px var(--gold-06)}
+.scanbar input{flex:1;min-width:0;background:transparent;border:0;color:var(--white);
+  font-family:var(--mono);font-size:13px;padding:12px 20px}
+.scanbar input::placeholder{color:var(--grey-2)}
+.scanbar .btn{padding:14px 26px}
+
+.hero-meta{margin-top:30px;display:flex;align-items:center;gap:26px;flex-wrap:wrap;
+  font-family:var(--mono);font-size:11.5px;letter-spacing:.1em;color:var(--grey-2)}
+.hero-meta b{color:var(--white);font-weight:500}
+.hero-meta i{font-style:normal;color:var(--gold)}
+.hero-meta .sep{width:1px;height:14px;background:var(--hairline-2)}
+
+/* landing dossier (hero) */
+.hero-visual{position:relative;display:flex;justify-content:flex-end}
+.lp-dossier{
+  position:relative;width:min(470px,100%);border-radius:var(--r);padding:28px;overflow:hidden;
+  background:linear-gradient(165deg,rgba(255,255,255,.055),rgba(255,255,255,.014) 60%);
+  border:1px solid rgba(255,255,255,.09);
+  -webkit-backdrop-filter:blur(22px);backdrop-filter:blur(22px);
+  box-shadow:0 50px 110px -42px rgba(0,0,0,.95),0 0 90px -30px rgba(226,182,91,.16),inset 0 1px 0 rgba(255,255,255,.09);
+}
+.lp-dossier::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  background:radial-gradient(420px circle at var(--mx,70%) var(--my,20%),rgba(226,182,91,.08),transparent 55%);
+  opacity:0;transition:opacity .4s}
+.lp-dossier:hover::after{opacity:1}
+.scanline{position:absolute;left:0;right:0;top:-2px;height:2px;z-index:5;opacity:0;pointer-events:none;
+  background:linear-gradient(90deg,transparent,var(--gold),transparent);box-shadow:0 0 22px rgba(226,182,91,.7)}
+.tracing .scanline{animation:scan .95s var(--ease)}
+@keyframes scan{0%{top:-2px;opacity:0}12%{opacity:1}100%{top:100%;opacity:0}}
+.d-content{position:relative;z-index:2;transition:opacity .4s var(--ease),filter .4s var(--ease)}
+.tracing .d-content{opacity:.16;filter:blur(5px)}
+
+.d-top{display:flex;justify-content:space-between;align-items:center;gap:12px;
+  padding-bottom:16px;margin-bottom:18px;border-bottom:1px solid var(--hairline)}
+.d-top .t{font-family:var(--mono);font-size:9.5px;letter-spacing:.26em;color:var(--grey-2);text-transform:uppercase}
+.d-status{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:9.5px;letter-spacing:.2em;text-transform:uppercase}
+.d-status .dot{width:6px;height:6px;border-radius:50%;background:var(--win);box-shadow:0 0 10px var(--win);animation:pulse 2.2s infinite}
+.d-status .live{color:var(--win)}
+.d-status .trc{display:none;color:var(--gold)}
+.tracing .d-status .live,.tracing .d-status .dot{display:none}
+.tracing .d-status .trc{display:inline}
+
+.d-id{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.d-wallet{font-family:var(--mono);font-size:16px;color:var(--white);letter-spacing:.03em}
+.d-sub{font-family:var(--mono);font-size:10.5px;color:var(--grey-2);margin-top:6px;line-height:1.6}
+.d-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:20px 0 14px}
+.d-fund{font-family:var(--mono);font-size:10.5px;line-height:1.8;color:var(--grey);
+  padding:12px 15px;border-radius:12px;background:var(--gold-06)}
+.d-fund .k{color:var(--grey-2)}.d-fund .a{color:var(--gold)}
+.d-ph{font-family:var(--mono);font-size:9px;letter-spacing:.22em;color:var(--grey-2);text-transform:uppercase;margin:18px 0 4px}
+.d-foot{margin-top:18px;padding-top:14px;border-top:1px solid var(--hairline);
+  display:flex;justify-content:space-between;font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;color:var(--grey-2);text-transform:uppercase}
+.d-foot b{color:var(--gold);font-weight:500}
+
+/* ============================================================
+   LANDING — TICKER / COVERAGE
+============================================================ */
+.ticker{border-top:1px solid var(--hairline);border-bottom:1px solid var(--hairline);
+  background:rgba(255,255,255,.012);overflow:hidden;padding:15px 0}
+.ticker-track{display:flex;gap:64px;width:max-content;animation:tick 48s linear infinite}
+@keyframes tick{to{transform:translateX(-50%)}}
+.tkk{display:flex;align-items:center;gap:12px;white-space:nowrap;
+  font-family:var(--mono);font-size:11px;letter-spacing:.06em;color:var(--grey)}
+.tkk .lab{color:var(--grey-2);letter-spacing:.22em;font-size:9.5px}
+.tkk .tok{color:var(--white)}
+.tkk .vd{width:5px;height:5px;border-radius:50%;box-shadow:0 0 8px currentColor}
+.tkk .v{font-size:10px;letter-spacing:.14em;font-weight:500}
+.tkk .win{color:var(--win)}.tkk .rug{color:var(--rug)}.tkk .fresh{color:var(--gold)}
+
+.coverage{padding:40px 0 0}
+.coverage-in{display:flex;align-items:center;gap:clamp(20px,4vw,44px);flex-wrap:wrap}
+.coverage .cl{font-family:var(--mono);font-size:10px;letter-spacing:.26em;color:var(--grey-2);text-transform:uppercase}
+.coverage .cv{font-size:14.5px;color:var(--grey);font-weight:500}
+.coverage .cd{width:1px;height:16px;background:var(--hairline-2)}
+
+/* ============================================================
+   LANDING — PROBLEM
+============================================================ */
+.problem h2{margin-top:30px;max-width:21ch}
+.problem .lede{margin-top:28px}
+.truths{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(32px,4.5vw,64px);margin-top:clamp(56px,7vw,88px)}
+.truth{padding-top:26px;border-top:1px solid var(--hairline-2);position:relative}
+.truth::before{content:"";position:absolute;top:-1px;left:0;width:44px;height:1px;background:var(--gold)}
+.truth .n{font-family:var(--display);font-size:clamp(44px,4.6vw,64px);font-weight:500;color:var(--white);line-height:1;letter-spacing:-.02em}
+.truth .n em{font-style:normal;color:var(--gold)}
+.truth p{margin-top:16px;font-size:15px;max-width:32ch}
+.truth .src{display:block;margin-top:18px;font-family:var(--mono);font-size:9.5px;letter-spacing:.2em;color:var(--grey-2);text-transform:uppercase}
+
+/* ============================================================
+   LANDING — CAPABILITIES (bento)
+============================================================ */
+.caps-head{display:flex;justify-content:space-between;align-items:flex-end;gap:40px;flex-wrap:wrap}
+.caps-head h2{margin-top:30px}
+.caps-head .lede{max-width:40ch}
+.bento{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:clamp(52px,6vw,76px)}
+.cell{position:relative;border-radius:var(--r);padding:32px;overflow:hidden;
+  background:var(--panel);border:1px solid var(--hairline);
+  transition:transform .35s var(--ease),border-color .35s,background .35s}
+.cell:hover{transform:translateY(-4px);border-color:var(--gold-30);background:var(--panel-2)}
+.cell-wide{grid-column:span 2}
+.ftag{display:inline-flex;align-items:center;gap:8px;
+  font-family:var(--mono);font-size:10px;font-weight:500;letter-spacing:.26em;color:var(--gold);text-transform:uppercase}
+.ftag::before{content:"";width:5px;height:5px;border-radius:50%;background:var(--gold);box-shadow:0 0 8px rgba(226,182,91,.8)}
+.cell h3{margin:20px 0 12px}
+.cell p{font-size:14.5px;line-height:1.7}
+.cell-wide .inner{display:grid;grid-template-columns:1fr 1fr;gap:32px;align-items:center}
+.mini-list{border-radius:14px;background:rgba(255,255,255,.025);border:1px solid var(--hairline);padding:6px 16px}
+.chips{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}
+
+/* ============================================================
+   LANDING — TERMINAL SECTION (the feature)
+============================================================ */
+.tsec{background:var(--black-2);border-top:1px solid var(--hairline);border-bottom:1px solid var(--hairline);overflow:hidden}
+.tsec-glow{position:absolute;left:50%;top:60%;transform:translate(-50%,-50%);
+  width:1100px;height:640px;pointer-events:none;
+  background:radial-gradient(ellipse,rgba(226,182,91,.10),transparent 62%);filter:blur(46px)}
+.tsec-grid{position:relative;z-index:2;display:grid;grid-template-columns:minmax(0,.92fr) minmax(0,1.08fr);gap:clamp(44px,6vw,84px);align-items:center}
+.tsec-copy h2{margin:30px 0 26px}
+.tsec-points{margin:34px 0 40px;display:grid;gap:18px}
+.tp{display:flex;gap:15px;align-items:flex-start;font-size:15px}
+.tp .ic{flex:none;width:22px;height:22px;border-radius:50%;margin-top:2px;
+  border:1px solid var(--gold-30);background:var(--gold-06);
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--mono);font-size:10px;color:var(--gold)}
+.tp b{color:var(--white);font-weight:500}
+.tsec-actions{display:flex;gap:14px;flex-wrap:wrap}
+
+/* framed live preview */
+.frame{
+  position:relative;border-radius:22px;overflow:hidden;
+  background:linear-gradient(168deg,rgba(255,255,255,.05),rgba(255,255,255,.012));
+  border:1px solid rgba(255,255,255,.09);
+  -webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);
+  box-shadow:0 60px 130px -48px rgba(0,0,0,.95),0 0 100px -34px rgba(226,182,91,.18),inset 0 1px 0 rgba(255,255,255,.08);
+}
+.frame-bar{display:flex;align-items:center;gap:12px;padding:13px 18px;border-bottom:1px solid var(--hairline)}
+.fdot{width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.12)}
+.fdot.g{background:var(--gold);box-shadow:0 0 8px rgba(226,182,91,.6)}
+.frame-bar .ft{font-family:var(--mono);font-size:9.5px;letter-spacing:.24em;color:var(--grey-2);text-transform:uppercase;margin-left:6px}
+.frame-bar .fl{margin-left:auto;display:flex;align-items:center;gap:8px;
+  font-family:var(--mono);font-size:9px;letter-spacing:.18em;color:var(--win);text-transform:uppercase}
+.frame-bar .fl .dot{width:5px;height:5px;border-radius:50%;background:var(--win);box-shadow:0 0 8px var(--win);animation:pulse 2.2s infinite}
+.frame-body{height:368px;overflow:hidden;position:relative}
+.frame-body::after{content:"";position:absolute;left:0;right:0;bottom:0;height:90px;pointer-events:none;
+  background:linear-gradient(to top,var(--black-2),transparent)}
+.pv-row{
+  display:grid;grid-template-columns:58px minmax(0,1fr) 122px 48px;gap:12px;align-items:center;
+  padding:13px 18px;border-bottom:1px solid var(--hairline);
+}
+.pv-row.flash{animation:flash 1.3s var(--ease)}
+@keyframes flash{0%{background:var(--gold-12)}100%{background:transparent}}
+.pv-row .time{font-family:var(--mono);font-size:10px;color:var(--grey-2)}
+.pv-row .tk{font-weight:500;color:var(--white);font-size:13.5px}
+.pv-row .nm{font-size:10.5px;color:var(--grey-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.frame-cta{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);z-index:3}
+
+/* ============================================================
+   LANDING — PROTOCOL
+============================================================ */
+.protocol h2{margin-top:30px}
+.rail{position:relative;height:1px;background:var(--hairline-2);margin:clamp(56px,7vw,84px) 0 44px}
+.rail i{position:absolute;top:-3.5px;width:8px;height:8px;border-radius:50%;background:var(--gold);box-shadow:0 0 14px rgba(226,182,91,.8)}
+.rail i:nth-child(1){left:0}.rail i:nth-child(2){left:calc(33.333% + 12px)}.rail i:nth-child(3){left:calc(66.666% + 24px)}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(28px,4vw,56px)}
+.step .sn{font-family:var(--mono);font-size:10.5px;letter-spacing:.3em;color:var(--gold);text-transform:uppercase}
+.step h3{margin:16px 0 12px}
+.step p{font-size:14.5px}
+.term{margin-top:22px;font-family:var(--mono);font-size:11.5px;color:var(--grey);
+  border-radius:12px;padding:12px 16px;background:rgba(255,255,255,.03);border:1px solid var(--hairline);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.term b{color:var(--gold);font-weight:500}
+.term .c{color:var(--grey-2)}
+
+/* ============================================================
+   LANDING — ALERTS
+============================================================ */
+.alerts-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(48px,7vw,100px);align-items:center}
+.alerts-copy h2{margin:30px 0 26px}
+.apoints{margin-top:36px;display:grid;gap:20px}
+.alert-stage{position:relative;display:flex;justify-content:center;padding:30px 0}
+.stage-glow{position:absolute;inset:-60px -40px;pointer-events:none;
+  background:radial-gradient(circle at 55% 45%,rgba(226,182,91,.10),transparent 62%);filter:blur(30px)}
+.tg{position:relative;z-index:2;width:min(430px,100%);border-radius:24px;overflow:hidden;
+  background:linear-gradient(165deg,rgba(255,255,255,.055),rgba(255,255,255,.015));
+  border:1px solid rgba(255,255,255,.09);
+  -webkit-backdrop-filter:blur(22px);backdrop-filter:blur(22px);
+  box-shadow:0 50px 110px -42px rgba(0,0,0,.95),inset 0 1px 0 rgba(255,255,255,.08)}
+.tg-head{display:flex;align-items:center;gap:13px;padding:18px 22px;border-bottom:1px solid var(--hairline)}
+.tg-ava{width:38px;height:38px;border-radius:50%;flex:none;
+  background:linear-gradient(135deg,var(--gold-hi),var(--gold-deep));
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--display);font-weight:600;color:#141007;font-size:13px}
+.tg-head .n{font-weight:500;font-size:14.5px;color:var(--white)}
+.tg-head .s{display:flex;align-items:center;gap:7px;font-family:var(--mono);font-size:9.5px;letter-spacing:.18em;color:var(--win);margin-top:3px}
+.tg-head .s::before{content:"";width:5px;height:5px;border-radius:50%;background:var(--win);box-shadow:0 0 8px var(--win)}
+.tg-body{padding:20px 22px 22px}
+.tg-msg{border-radius:16px;padding:18px 19px;background:rgba(255,255,255,.03);border:1px solid var(--hairline);
+  font-family:var(--mono);font-size:12px;line-height:2;color:var(--grey)}
+.tg-msg .hd{color:var(--win);font-weight:500;letter-spacing:.1em}
+.tg-msg .tk2{color:var(--white);font-weight:500}
+.tg-msg .am{color:var(--gold)}
+.tg-msg .dim{color:var(--grey-2)}
+.tg-msg .ln{display:block;height:1px;background:var(--hairline);margin:10px 0}
+.tg-time{margin-top:12px;text-align:right;font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;color:var(--grey-2);text-transform:uppercase}
+.tg-time b{color:var(--gold);font-weight:500}
+.float{position:absolute;z-index:1;border-radius:14px;padding:13px 16px;
+  background:rgba(255,255,255,.035);border:1px solid var(--hairline);
+  -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
+  font-family:var(--mono);font-size:10.5px;color:var(--grey);
+  display:flex;align-items:center;gap:10px;white-space:nowrap;
+  box-shadow:0 24px 60px -28px rgba(0,0,0,.9)}
+.float .vd{width:5px;height:5px;border-radius:50%;box-shadow:0 0 8px currentColor}
+.float.t1{top:-6px;right:-14px;transform:rotate(2.5deg)}
+.float.t2{bottom:-4px;left:-26px;transform:rotate(-2deg)}
+.float .tok{color:var(--white)}
+
+/* ============================================================
+   LANDING — PRICING / FINAL / FOOTER
+============================================================ */
+.pricing-head{text-align:center}
+.pricing-head h2{margin-top:30px}
+.pricing-head .label{justify-content:center}
+.tiers{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:clamp(56px,7vw,80px);align-items:stretch}
+.tier{position:relative;border-radius:24px;padding:38px 32px;display:flex;flex-direction:column;
+  background:var(--panel);border:1px solid var(--hairline);
+  transition:transform .35s var(--ease),border-color .35s}
+.tier:hover{transform:translateY(-5px);border-color:var(--hairline-2)}
+.tier-featured{background:linear-gradient(170deg,rgba(226,182,91,.07),rgba(255,255,255,.02) 50%);border:1px solid transparent}
+.tier-featured::before{content:"";position:absolute;inset:0;border-radius:24px;padding:1px;pointer-events:none;
+  background:linear-gradient(165deg,rgba(244,215,137,.7),rgba(226,182,91,.18) 45%,rgba(255,255,255,.05));
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor;mask-composite:exclude}
+.tier-featured::after{content:"";position:absolute;top:-50px;left:50%;transform:translateX(-50%);
+  width:70%;height:110px;pointer-events:none;
+  background:radial-gradient(ellipse,rgba(226,182,91,.22),transparent 70%);filter:blur(22px)}
+.tier .badge{position:absolute;top:-13px;left:50%;transform:translateX(-50%);z-index:2;
+  background:linear-gradient(135deg,var(--gold-hi),var(--gold));color:#141007;
+  font-family:var(--mono);font-size:9px;font-weight:600;letter-spacing:.24em;text-transform:uppercase;
+  padding:7px 15px;border-radius:100px;white-space:nowrap}
+.tname{font-family:var(--mono);font-size:11px;font-weight:500;letter-spacing:.3em;color:var(--gold);text-transform:uppercase}
+.tprice{display:flex;align-items:baseline;gap:10px;margin:22px 0 8px}
+.tprice .p{font-family:var(--display);font-size:46px;font-weight:500;color:var(--white);line-height:1;letter-spacing:-.02em}
+.tprice .per{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;color:var(--grey-2);text-transform:uppercase}
+.tfor{font-size:14px;color:var(--grey-2);margin-bottom:28px}
+.tier ul{list-style:none;display:grid;gap:13px;margin-bottom:36px}
+.tier li{display:flex;gap:13px;align-items:flex-start;font-size:14.5px}
+.tier li::before{content:"✓";font-family:var(--mono);font-size:10px;color:var(--gold);
+  width:18px;height:18px;border-radius:50%;flex:none;margin-top:2px;
+  border:1px solid var(--gold-30);background:var(--gold-06);
+  display:flex;align-items:center;justify-content:center}
+.tier li b{color:var(--white);font-weight:500}
+.tier .btn{margin-top:auto;width:100%}
+.pnote{margin-top:32px;text-align:center;font-family:var(--mono);font-size:10.5px;letter-spacing:.22em;color:var(--grey-2);text-transform:uppercase}
+.pnote i{font-style:normal;color:var(--gold)}
+
+.final{text-align:center;overflow:hidden}
+.fin-glow{position:absolute;left:50%;bottom:-340px;transform:translateX(-50%);
+  width:1100px;height:700px;pointer-events:none;
+  background:radial-gradient(ellipse,rgba(226,182,91,.16),transparent 62%);filter:blur(48px)}
+.final .label{justify-content:center}
+.final h2{margin:30px auto 26px;max-width:18ch}
+.final .lede{margin:0 auto 46px}
+.final-actions{display:flex;gap:18px;justify-content:center;flex-wrap:wrap;position:relative;z-index:2}
+
+footer{border-top:1px solid var(--hairline);padding-top:64px;overflow:hidden}
+.foot-grid{display:flex;justify-content:space-between;gap:48px;flex-wrap:wrap;align-items:flex-start}
+.foot-brand p{margin-top:16px;font-size:13.5px;color:var(--grey-2);max-width:32ch}
+.foot-cols{display:flex;gap:clamp(40px,7vw,96px);flex-wrap:wrap}
+.fcol .fh{font-family:var(--mono);font-size:9.5px;letter-spacing:.28em;color:var(--grey-2);text-transform:uppercase;margin-bottom:18px}
+.fcol a{display:block;font-size:14px;color:var(--grey);padding:5px 0;transition:color .25s;cursor:pointer}
+.fcol a:hover{color:var(--gold)}
+.foot-base{margin-top:56px;padding:24px 0;border-top:1px solid var(--hairline);
+  display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap;
+  font-family:var(--mono);font-size:10px;letter-spacing:.16em;color:var(--grey-2);text-transform:uppercase}
+.foot-base .f{color:var(--gold)}
+.watermark-clip{overflow:hidden;margin-top:8px}
+.watermark{font-family:var(--display);font-weight:600;text-align:center;user-select:none;pointer-events:none;
+  font-size:clamp(72px,15.5vw,224px);line-height:.78;letter-spacing:-.015em;
+  color:transparent;-webkit-text-stroke:1px rgba(255,255,255,.055);transform:translateY(26%)}
+
+/* ============================================================
+   TERMINAL APP VIEW
+============================================================ */
+#view-terminal .topbar{
+  display:flex;align-items:center;gap:16px;padding:14px 18px;
+  border-bottom:1px solid var(--hairline);
+  background:rgba(6,6,7,.7);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);
+}
+.terminal-tag{font-family:var(--mono);font-size:8.5px;letter-spacing:.26em;color:var(--grey-2);text-transform:uppercase;
+  border:1px solid var(--hairline);border-radius:100px;padding:4px 9px;margin-left:2px}
+.tracebar{flex:1;display:flex;align-items:center;gap:6px;max-width:560px;
+  border:1px solid var(--hairline-2);border-radius:100px;padding:5px;
+  background:rgba(255,255,255,.02);transition:border-color .3s,box-shadow .3s}
+.tracebar:focus-within{border-color:var(--gold-30);box-shadow:0 0 0 4px var(--gold-06)}
+.tracebar .slash{flex:none;margin-left:10px;font-family:var(--mono);font-size:10px;color:var(--grey-2);
+  border:1px solid var(--hairline);border-radius:6px;padding:2px 7px}
+.tracebar input{flex:1;min-width:0;background:transparent;border:0;color:var(--white);
+  font-family:var(--mono);font-size:12px;padding:8px 10px}
+.tracebar input::placeholder{color:var(--grey-2)}
+.tracebar .btn{padding:9px 18px}
+.top-right{display:flex;align-items:center;gap:10px;margin-left:auto;flex:none}
+.session{display:flex;gap:16px;font-family:var(--mono);font-size:10px;letter-spacing:.12em;color:var(--grey-2);text-transform:uppercase;margin-right:6px}
+.session b{color:var(--white);font-weight:500}
+.session .w b{color:var(--win)}.session .r b{color:var(--rug)}
+.tierbadge{font-family:var(--mono);font-size:9px;font-weight:600;letter-spacing:.24em;text-transform:uppercase;
+  color:#141007;background:linear-gradient(135deg,var(--gold-hi),var(--gold));padding:7px 13px;border-radius:100px}
+
+#view-terminal .main{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 404px;gap:14px;padding:14px 18px}
+.panel{display:flex;flex-direction:column;min-height:0;border-radius:16px;overflow:hidden;position:relative;
+  background:linear-gradient(170deg,rgba(255,255,255,.035),rgba(255,255,255,.012));
+  border:1px solid var(--hairline);
+  box-shadow:0 30px 70px -40px rgba(0,0,0,.9),inset 0 1px 0 rgba(255,255,255,.05)}
+.panel-head{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:15px 18px;border-bottom:1px solid var(--hairline)}
+.ph-title{display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:10.5px;letter-spacing:.26em;color:var(--white);text-transform:uppercase}
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--win);box-shadow:0 0 10px var(--win);animation:pulse 2.2s infinite}
+.live-dot.paused{background:var(--gold);box-shadow:0 0 10px var(--gold);animation:none}
+.ph-sub{font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;color:var(--grey-2);text-transform:uppercase}
+.filters{display:flex;gap:6px;margin-left:auto;flex-wrap:wrap}
+.fpill{font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--grey-2);border:1px solid var(--hairline);border-radius:100px;padding:7px 13px;transition:all .25s}
+.fpill:hover{color:var(--grey);border-color:var(--hairline-2)}
+.fpill.on{color:var(--gold);border-color:var(--gold-30);background:var(--gold-06)}
+
+.cols{display:grid;grid-template-columns:64px minmax(0,1.3fr) 118px 128px 64px 56px 60px;gap:10px;align-items:center;
+  padding:10px 18px;border-bottom:1px solid var(--hairline);
+  font-family:var(--mono);font-size:8.5px;letter-spacing:.2em;color:var(--grey-2);text-transform:uppercase}
+.feed{flex:1;overflow-y:auto;min-height:0}
+.row{display:grid;grid-template-columns:64px minmax(0,1.3fr) 118px 128px 64px 56px 60px;gap:10px;align-items:center;
+  padding:12px 18px;border-bottom:1px solid var(--hairline);border-left:2px solid transparent;cursor:pointer;
+  transition:background .25s,border-color .25s}
+.row:hover{background:rgba(255,255,255,.025)}
+.row.active{background:var(--gold-06);border-left-color:var(--gold)}
+.row.flash{animation:flash 1.4s var(--ease)}
+.row .time{font-family:var(--mono);font-size:10.5px;color:var(--grey-2)}
+.row .tok .tk{font-weight:500;color:var(--white);font-size:13.5px}
+.row .tok .nm{font-size:11px;color:var(--grey-2);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .dev{font-family:var(--mono);font-size:10.5px;color:var(--grey)}
+.row .bundle{font-family:var(--mono);font-size:11px;color:var(--grey)}
+.row .bundle.hot{color:var(--rug)}
+.row .act{font-family:var(--mono);font-size:11px;color:var(--grey-2);text-align:right;opacity:0;transition:opacity .2s}
+.row:hover .act{opacity:1}
+.row .act span{cursor:pointer;padding:4px}
+.row .act span:hover{color:var(--gold)}
+
+.tabs{display:flex;border-bottom:1px solid var(--hairline)}
+.tab{flex:1;padding:14px 6px;text-align:center;
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--grey-2);border-bottom:2px solid transparent;transition:color .25s,border-color .25s}
+.tab:hover{color:var(--grey)}
+.tab.on{color:var(--gold);border-bottom-color:var(--gold)}
+.tabview{flex:1;overflow-y:auto;min-height:0;display:none}
+.tabview.on{display:block}
+
+.t-dossier{padding:20px;position:relative}
+.d-file{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:18px}
+.d-file .t{font-family:var(--mono);font-size:9px;letter-spacing:.24em;color:var(--grey-2);text-transform:uppercase}
+.d-score{display:flex;align-items:baseline;gap:6px;font-family:var(--mono)}
+.d-score .n{font-size:22px;font-weight:600}
+.d-score .l{font-size:8.5px;letter-spacing:.2em;color:var(--grey-2);text-transform:uppercase}
+.t-dossier .d-wallet{font-size:15.5px;display:flex;align-items:center;gap:9px}
+.cp{font-size:11px;color:var(--grey-2);cursor:pointer;transition:color .2s}
+.cp:hover{color:var(--gold)}
+.d-token{margin-top:16px;display:flex;justify-content:space-between;align-items:center;gap:10px;
+  padding:12px 14px;border-radius:12px;background:rgba(255,255,255,.025);border:1px solid var(--hairline)}
+.d-token .tk{font-weight:500;color:var(--white);font-size:14px}
+.d-token .nm{font-size:11px;color:var(--grey-2)}
+.d-token .open{font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;color:var(--gold);text-transform:uppercase;cursor:pointer}
+.d-token .open:hover{color:var(--gold-hi)}
+.t-dossier .d-stats{margin:16px 0}
+#view-terminal .ds .v{font-size:18px}
+.d-risk{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:14px}
+.dr{display:flex;justify-content:space-between;align-items:center;gap:8px;
+  font-family:var(--mono);font-size:10px;padding:10px 13px;border-radius:12px;background:rgba(255,255,255,.025)}
+.dr .k{color:var(--grey-2);text-transform:uppercase;letter-spacing:.14em;font-size:8.5px}
+.dr .v{color:var(--white)}.dr .v.ok{color:var(--win)}.dr .v.warn{color:var(--gold)}.dr .v.bad{color:var(--rug)}
+.d-actions{display:flex;gap:8px;margin-top:18px}
+.d-actions .btn{flex:1;padding:12px 10px}
+.d-conf{margin-top:14px;display:flex;justify-content:space-between;
+  font-family:var(--mono);font-size:9px;letter-spacing:.18em;color:var(--grey-2);text-transform:uppercase}
+.d-conf b{color:var(--gold);font-weight:500}
+
+.empty{padding:56px 28px;text-align:center;color:var(--grey-2)}
+.empty .ic{font-size:22px;margin-bottom:14px;opacity:.5}
+.empty p{font-size:13px;line-height:1.7;max-width:30ch;margin:0 auto}
+.empty .mono-hint{font-family:var(--mono);font-size:10px;letter-spacing:.14em;margin-top:14px;text-transform:uppercase}
+
+.witem{display:flex;align-items:center;gap:12px;padding:14px 18px;
+  border-bottom:1px solid var(--hairline);cursor:pointer;transition:background .25s}
+.witem:hover{background:rgba(255,255,255,.025)}
+.witem .info{flex:1;min-width:0}
+.witem .addr{font-family:var(--mono);font-size:12px;color:var(--white)}
+.witem .meta{font-family:var(--mono);font-size:9.5px;color:var(--grey-2);margin-top:3px}
+.witem .meta .hot{color:var(--gold)}
+.witem .unf{font-family:var(--mono);font-size:10px;color:var(--grey-2);padding:6px}
+.witem .unf:hover{color:var(--rug)}
+
+.lb-head{display:grid;grid-template-columns:30px minmax(0,1fr) 56px 70px 52px;gap:10px;
+  padding:12px 18px;border-bottom:1px solid var(--hairline);
+  font-family:var(--mono);font-size:8px;letter-spacing:.18em;color:var(--grey-2);text-transform:uppercase}
+.lrow{display:grid;grid-template-columns:30px minmax(0,1fr) 56px 70px 52px;gap:10px;align-items:center;
+  padding:13px 18px;border-bottom:1px solid var(--hairline);cursor:pointer;transition:background .25s}
+.lrow:hover{background:rgba(255,255,255,.025)}
+.lrow .rk{font-family:var(--mono);font-size:11px;color:var(--grey-2)}
+.lrow:first-child .rk{color:var(--gold)}
+.lrow .addr{font-family:var(--mono);font-size:11.5px;color:var(--white)}
+.lrow .sub{font-family:var(--mono);font-size:9px;color:var(--grey-2);margin-top:2px}
+.lrow .num{font-family:var(--mono);font-size:11px;color:var(--grey);text-align:right}
+.lrow .ath{color:var(--gold)}
+
+.statusbar{display:flex;align-items:center;gap:20px;flex-wrap:wrap;
+  padding:11px 18px;border-top:1px solid var(--hairline);
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;color:var(--grey-2);text-transform:uppercase;
+  background:rgba(6,6,7,.7)}
+.statusbar .dot{width:5px;height:5px;border-radius:50%;background:var(--win);box-shadow:0 0 8px var(--win)}
+.statusbar .grp{display:flex;align-items:center;gap:9px}
+.statusbar .gold{color:var(--gold)}
+.statusbar .clock{margin-left:auto;color:var(--grey)}
+
+.toasts{position:fixed;top:78px;right:18px;z-index:95;display:flex;flex-direction:column;gap:10px;pointer-events:none}
+.toast{display:flex;align-items:center;gap:10px;border-radius:14px;padding:13px 16px;min-width:240px;
+  background:rgba(10,10,12,.85);border:1px solid var(--hairline-2);
+  -webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);
+  box-shadow:0 24px 60px -24px rgba(0,0,0,.9);
+  font-family:var(--mono);font-size:10.5px;color:var(--grey);animation:tin .45s var(--ease)}
+.toast.out{animation:tout .4s var(--ease) forwards}
+@keyframes tin{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:none}}
+@keyframes tout{to{opacity:0;transform:translateX(24px)}}
+.toast .vd{width:5px;height:5px;border-radius:50%;background:currentColor;box-shadow:0 0 8px currentColor;flex:none}
+.toast b{color:var(--white);font-weight:500}
+
+/* ============================================================
+   RESPONSIVE
+============================================================ */
+@media (max-width:1060px){
+  .hero-grid{grid-template-columns:1fr;gap:72px}
+  .hero-visual{justify-content:center}
+  .bento{grid-template-columns:1fr 1fr}
+  .cell-wide{grid-column:span 2}
+  .cell-wide .inner{grid-template-columns:1fr}
+  .tsec-grid,.alerts-grid{grid-template-columns:1fr;gap:64px}
+  .nav-links{display:none}
+  body.app{overflow:auto;height:auto}
+  body.app #view-terminal{height:auto;min-height:100dvh}
+  #view-terminal .main{grid-template-columns:1fr}
+  .feed{max-height:54vh}
+  .tabview{max-height:60vh}
+  .session{display:none}
+  .cols,.row{grid-template-columns:56px minmax(0,1.4fr) 110px 64px 56px}
+  .cols .c-dev,.row .dev,.cols .c-act,.row .act{display:none}
+}
+@media (max-width:760px){
+  .truths,.steps,.tiers,.bento{grid-template-columns:1fr}
+  .cell-wide{grid-column:auto}
+  .rail{display:none}
+  .float{display:none}
+  .hero-rings{right:-70%;opacity:.6}
+}
+@media (max-width:620px){
+  #view-terminal .topbar{flex-wrap:wrap}
+  .tracebar{order:3;max-width:none;width:100%}
+  .cols,.row{grid-template-columns:50px minmax(0,1.4fr) 96px 50px}
+  .cols .c-bundle,.row .bundle{display:none}
+  .filters{margin-left:0}
+  .scanbar{flex-direction:column;border-radius:24px;padding:8px}
+  .scanbar .btn{width:100%}
+  .lp-dossier{padding:22px 20px}
+  .d-stats{grid-template-columns:repeat(2,1fr)}
+  .d-id{flex-direction:column;gap:14px}
+}
+
+/* ============================================================
+   REDUCED MOTION
+============================================================ */
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  .glyph::before,.hero-rings::after,.ticker-track,.live-dot,.d-status .dot{animation:none}
+  .tracing .scanline{animation:none}
+  .tracing .d-content{opacity:1;filter:none}
+  .rv{opacity:1;transform:none;filter:none;transition:none}
+  .row.flash,.pv-row.flash,.toast{animation:none}
+  .btn,.tier,.cell{transition:none}
+}
+</style>
+</head>
+<body>
+
+<!-- ████████████████████ LANDING VIEW ████████████████████ -->
+<div id="view-landing">
+
+<nav id="nav">
+  <div class="nav-in">
+    <a class="logo" href="#" aria-label="DevRadar home">
+      <span class="glyph" aria-hidden="true"></span>
+      <span class="wordmark">DEV<em>RADAR</em></span>
+    </a>
+    <div class="nav-links">
+      <a href="#terminal">Terminal</a>
+      <a href="#capabilities">Capabilities</a>
+      <a href="#alerts">Alerts</a>
+      <a href="#pricing">Pricing</a>
+    </div>
+    <button class="btn btn-gold btn-sm" data-launch>Launch App</button>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="hero-rings" aria-hidden="true"></div>
+  <div class="hero-glow" aria-hidden="true"></div>
+  <div class="wrap hero-grid">
+    <div>
+      <span class="label hl rv">Deployer Intelligence · Solana</span>
+      <h1 class="hl rv">Know the dev<br/>before <span class="goldtx">you ape.</span></h1>
+      <p class="lede hl rv">Every deployer wallet carries a record — launches, rugs, bundles, funding. DevRadar compiles it into one dossier in under two seconds. Before your entry, not after.</p>
+      <div class="scanbar hl rv" role="search">
+        <input id="hero-trace" type="text" placeholder="Paste contract address or deployer wallet" aria-label="Contract address or deployer wallet" />
+        <button class="btn btn-gold" id="hero-trace-btn" type="button">Trace</button>
+      </div>
+      <div class="hero-meta hl rv">
+        <span><b>184,302</b> deployers indexed</span>
+        <span class="sep" aria-hidden="true"></span>
+        <span><b>61,448</b> rugs flagged</span>
+        <span class="sep" aria-hidden="true"></span>
+        <span>median trace <i>1.8s</i></span>
+      </div>
+    </div>
+
+    <div class="hero-visual hl rv">
+      <article class="lp-dossier" id="lp-dossier" aria-live="polite">
+        <span class="scanline" aria-hidden="true"></span>
+        <div class="d-top">
+          <span class="t" id="lp-file">Dossier · DR-2026-184302</span>
+          <span class="d-status">
+            <span class="dot" aria-hidden="true"></span>
+            <span class="live">Live file</span>
+            <span class="trc">Re-tracing…</span>
+          </span>
+        </div>
+        <div class="d-content">
+          <div class="d-id">
+            <div>
+              <div class="d-wallet" id="lp-wallet">7xKp····9fQm</div>
+              <div class="d-sub" id="lp-sub">First seen 14 months ago · pump.fun native</div>
+            </div>
+            <span class="verdict win" id="lp-verdict"><span class="vd" aria-hidden="true"></span><span id="lp-verdict-t">Serial Winner</span></span>
+          </div>
+          <div class="d-stats">
+            <div class="ds"><div class="k">Launches</div><div class="v" id="lp-launch">14</div></div>
+            <div class="ds"><div class="k">Rug rate</div><div class="v good" id="lp-rug">0%</div></div>
+            <div class="ds"><div class="k">Best ATH</div><div class="v" id="lp-ath">$4.2M</div></div>
+            <div class="ds"><div class="k">Lifespan</div><div class="v" id="lp-life">11d</div></div>
+          </div>
+          <div class="d-fund" id="lp-fund"><span class="k">FUNDING</span> → <span class="a">Binance 8</span> hot wallet · 3d before first deploy · no mixer pattern</div>
+          <div class="d-ph">Prior launches</div>
+          <div id="lp-priors">
+            <div class="prior"><span class="t">$CATGPT</span><span class="m">peak $4.2M</span><span class="o win">CLEAN</span></div>
+            <div class="prior"><span class="t">$SOLPET</span><span class="m">peak $860K</span><span class="o win">CLEAN</span></div>
+            <div class="prior"><span class="t">$NORTH</span><span class="m">peak $1.2M</span><span class="o live">LIVE</span></div>
+          </div>
+          <div class="d-foot">
+            <span>Trace <b id="lp-time">1.8s</b></span>
+            <span>Confidence <b id="lp-conf">98%</b></span>
+          </div>
+        </div>
+      </article>
+    </div>
+  </div>
+</header>
+
+<div class="ticker" aria-hidden="true">
+  <div class="ticker-track" id="ticker-track">
+    <span class="tkk"><span class="lab">NEW DEPLOY</span><span class="tok">$GIGABRAIN</span><span>7xKp····9fQm</span><span class="vd win"></span><span class="v win">SERIAL WINNER</span></span>
+    <span class="tkk"><span class="lab">NEW DEPLOY</span><span class="tok">$ELONAI2</span><span>Dk3r····x2Vn</span><span class="vd rug"></span><span class="v rug">SERIAL RUGGER</span></span>
+    <span class="tkk"><span class="lab">NEW DEPLOY</span><span class="tok">$MOONCAT</span><span>9mTw····k4Lp</span><span class="vd fresh"></span><span class="v fresh">FRESH WALLET</span></span>
+    <span class="tkk"><span class="lab">BUNDLE FLAG</span><span class="tok">$PEPEKING</span><span>cluster holds 31.4%</span><span class="vd rug"></span><span class="v rug">HIGH RISK</span></span>
+    <span class="tkk"><span class="lab">NEW DEPLOY</span><span class="tok">$DEGENDOG</span><span>Hf8s····p1Qr</span><span class="vd win"></span><span class="v win">SERIAL WINNER</span></span>
+    <span class="tkk"><span class="lab">FUNDING FLAG</span><span class="tok">$SAFEMARS</span><span>linked to known rugger</span><span class="vd rug"></span><span class="v rug">AVOID</span></span>
+    <span class="tkk"><span class="lab">NEW DEPLOY</span><span class="tok">$WAGMI</span><span>3nVc····t7Ws</span><span class="vd fresh"></span><span class="v fresh">FRESH WALLET</span></span>
+  </div>
+</div>
+
+<div class="coverage">
+  <div class="wrap coverage-in rv">
+    <span class="cl">Indexed venues</span>
+    <span class="cd" aria-hidden="true"></span><span class="cv">pump.fun</span>
+    <span class="cd" aria-hidden="true"></span><span class="cv">Raydium LaunchLab</span>
+    <span class="cd" aria-hidden="true"></span><span class="cv">Meteora</span>
+    <span class="cd" aria-hidden="true"></span><span class="cv">Moonshot</span>
+  </div>
+</div>
+
+<section class="section problem">
+  <div class="wrap">
+    <div class="rv">
+      <span class="label">The blind spot</span>
+      <h2>The trenches don't kill traders.<br/><span class="goldtx">Deployers do.</span></h2>
+      <p class="lede">You can read the chart, the bundle, the lore. But the single variable that decides whether a token runs or rugs is the human who deployed it — and that wallet has a history nobody checks at launch speed.</p>
+    </div>
+    <div class="truths">
+      <div class="truth rv">
+        <div class="n">~98<em>%</em></div>
+        <p>of new Solana launches never reach a sustained market cap. Most die by design.</p>
+        <span class="src">On-chain launch outcomes</span>
+      </div>
+      <div class="truth rv">
+        <div class="n">1 <em>dev</em></div>
+        <p>behind dozens of tickers. Serial ruggers redeploy from fresh-looking wallets within hours.</p>
+        <span class="src">Funding-trace clustering</span>
+      </div>
+      <div class="truth rv">
+        <div class="n">&lt;2<em>s</em></div>
+        <p>is how long DevRadar needs to compile the full record. Faster than your buy confirms.</p>
+        <span class="src">Median dossier trace</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="capabilities" style="padding-top:0">
+  <div class="wrap">
+    <div class="caps-head rv">
+      <div>
+        <span class="label">Capabilities</span>
+        <h2>The full file,<br/>not a vibe check.</h2>
+      </div>
+      <p class="lede">Contract scanners read code. DevRadar reads the human — track record, behavior, and money flow behind every deploy.</p>
+    </div>
+    <div class="bento">
+      <div class="cell cell-wide rv">
+        <div class="inner">
+          <div>
+            <span class="ftag">Trace</span>
+            <h3>Deployer dossier</h3>
+            <p>Every prior launch from the wallet — peak market caps, outcomes, token lifespans — compiled back to its first transaction.</p>
+          </div>
+          <div class="mini-list" aria-hidden="true">
+            <div class="prior"><span class="t">$CATGPT</span><span class="m">peak $4.2M</span><span class="o win">CLEAN</span></div>
+            <div class="prior"><span class="t">$ELONAI</span><span class="m">peak $310K</span><span class="o rug">RUG</span></div>
+            <div class="prior"><span class="t">$NORTH</span><span class="m">peak $1.2M</span><span class="o live">LIVE</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="cell rv">
+        <span class="ftag">Label</span>
+        <h3>Auto-classification</h3>
+        <p>One verdict, computed from the on-chain record. Not Twitter sentiment.</p>
+        <div class="chips" aria-hidden="true">
+          <span class="verdict win"><span class="vd"></span>Winner</span>
+          <span class="verdict rug"><span class="vd"></span>Rugger</span>
+          <span class="verdict fresh"><span class="vd"></span>Fresh</span>
+        </div>
+      </div>
+      <div class="cell rv">
+        <span class="ftag">Bundle</span>
+        <h3>Bundle detection</h3>
+        <p>Supply concentration at block zero. See what share the dev's own cluster holds before you take the other side.</p>
+      </div>
+      <div class="cell rv">
+        <span class="ftag">Snipe</span>
+        <h3>Sniper clusters</h3>
+        <p>Coordinated first-block buyers mapped and flagged within seconds — the wallets positioned to exit on you.</p>
+      </div>
+      <div class="cell rv">
+        <span class="ftag">Ghost</span>
+        <h3>Ghost Match</h3>
+        <p>Fresh wallet, familiar fingerprint. Funding lineage and behavior patterns link "new" devs to flagged ruggers.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ TERMINAL — THE FEATURE ============ -->
+<section class="section tsec" id="terminal">
+  <div class="tsec-glow" aria-hidden="true"></div>
+  <div class="wrap tsec-grid">
+    <div class="tsec-copy rv">
+      <span class="label">The terminal</span>
+      <h2>Every deploy,<br/><span class="goldtx">already read.</span></h2>
+      <p class="lede">This is the live surface. Deploys stream in, verdicts attach in milliseconds, and the full dossier is one click away. The feed on the right is the real engine — running now.</p>
+      <div class="tsec-points">
+        <div class="tp"><span class="ic">✓</span><span><b>DR Score on every launch.</b> One 0–100 number from record, bundle, snipers and funding.</span></div>
+        <div class="tp"><span class="ic">✓</span><span><b>Filters that matter.</b> Winners-only mode turns the firehose into a sniper scope.</span></div>
+        <div class="tp"><span class="ic">✓</span><span><b>Watchlist &amp; leaderboard built in.</b> Follow proven devs, study the top of the board.</span></div>
+      </div>
+      <div class="tsec-actions">
+        <button class="btn btn-gold" data-launch>Launch terminal</button>
+        <a class="btn btn-line" href="#pricing">See access tiers</a>
+      </div>
+    </div>
+
+    <div class="rv">
+      <div class="frame">
+        <div class="frame-bar">
+          <span class="fdot g" aria-hidden="true"></span><span class="fdot" aria-hidden="true"></span><span class="fdot" aria-hidden="true"></span>
+          <span class="ft">DevRadar — Live deploys</span>
+          <span class="fl"><span class="dot" aria-hidden="true"></span>Live</span>
+        </div>
+        <div class="frame-body">
+          <div id="preview"></div>
+          <button class="btn btn-gold btn-sm frame-cta" data-launch>Open full terminal</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section protocol" id="protocol">
+  <div class="wrap">
+    <div class="rv">
+      <span class="label">Protocol</span>
+      <h2>Three moves.<br/>Under two seconds.</h2>
+    </div>
+    <div class="rail rv" aria-hidden="true"><i></i><i></i><i></i></div>
+    <div class="steps">
+      <div class="step rv">
+        <div class="sn">01 — Input</div>
+        <h3>Paste the CA</h3>
+        <p>Drop any Solana contract address — or the deployer wallet directly. DevRadar resolves the dev behind the token instantly.</p>
+        <div class="term"><span class="c">›</span> trace <b>8GsK····pump</b></div>
+      </div>
+      <div class="step rv">
+        <div class="sn">02 — Compile</div>
+        <h3>We pull the record</h3>
+        <p>Every prior launch, outcome, bundle footprint and funding hop — compiled into a single dossier with a confidence score.</p>
+        <div class="term"><span class="c">›</span> 14 launches · 0 rugs · funded via <b>CEX</b></div>
+      </div>
+      <div class="step rv">
+        <div class="sn">03 — Verdict</div>
+        <h3>You decide armed</h3>
+        <p>Classification, DR Score, risk flags and full history — rendered before your buy would have confirmed. Then it's your call.</p>
+        <div class="term"><span class="c">›</span> verdict <b>SERIAL WINNER</b> · score 92</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="alerts">
+  <div class="wrap alerts-grid">
+    <div class="alerts-copy rv">
+      <span class="label">Telegram alerts</span>
+      <h2>Proven devs,<br/><span class="goldtx">pushed to you.</span></h2>
+      <p class="lede">Don't watch the feed — let the feed watch for you. DevRadar streams classified deploys straight to Telegram, filtered by the only thing that matters: the record.</p>
+      <div class="apoints">
+        <div class="tp"><span class="ic">✓</span><span><b>Winner-only mode.</b> Only alert when a deployer with a verified track record goes live.</span></div>
+        <div class="tp"><span class="ic">✓</span><span><b>Rug shield.</b> Instant flag when a token you hold links to a known rugger's wallet cluster.</span></div>
+        <div class="tp"><span class="ic">✓</span><span><b>Dev watchlists.</b> Follow specific wallets and get pinged the block they deploy.</span></div>
+      </div>
+    </div>
+    <div class="alert-stage rv">
+      <div class="stage-glow" aria-hidden="true"></div>
+      <div class="float t1" aria-hidden="true"><span class="vd" style="color:var(--win)"></span><span class="tok">$DEGENDOG</span><span style="color:var(--win)">WINNER LIVE</span></div>
+      <div class="float t2" aria-hidden="true"><span class="vd" style="color:var(--rug)"></span><span class="tok">$SAFEMARS</span><span style="color:var(--rug)">RUG LINK</span></div>
+      <div class="tg" aria-label="Example Telegram alert">
+        <div class="tg-head">
+          <div class="tg-ava">DR</div>
+          <div>
+            <div class="n">DevRadar Bot</div>
+            <div class="s">LIVE FEED</div>
+          </div>
+        </div>
+        <div class="tg-body">
+          <div class="tg-msg">
+            <span class="hd">● PROVEN DEPLOYER LIVE</span><br/>
+            <span class="tk2">$NORTH</span> — North Road Dog<br/>
+            <span class="ln" aria-hidden="true"></span>
+            Dev <span class="am">7xKp····9fQm</span> · Serial Winner<br/>
+            14 launches · 0 rugs · best ATH <span class="am">$4.2M</span><br/>
+            Bundle <span class="am">4.1%</span> · Snipers <span class="am">low</span> · DR Score <span class="am">92</span><br/>
+            <span class="ln" aria-hidden="true"></span>
+            <span class="dim">dossier · chart · dev history</span>
+          </div>
+          <div class="tg-time">Delivered <b>1.8s</b> after deploy</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="pricing" style="padding-top:0">
+  <div class="wrap">
+    <div class="pricing-head rv">
+      <span class="label">Access</span>
+      <h2>Priced in SOL. Paid for<br/>by <span class="goldtx">one avoided rug.</span></h2>
+    </div>
+    <div class="tiers">
+      <div class="tier rv">
+        <div class="tname">Scout</div>
+        <div class="tprice"><span class="p">Free</span></div>
+        <p class="tfor">For checking before you ape.</p>
+        <ul>
+          <li><b>10 dossiers</b> per day</li>
+          <li>Classification &amp; core history</li>
+          <li>Live feed · 5-min delay</li>
+          <li>Community Telegram channel</li>
+        </ul>
+        <button class="btn btn-line" data-launch>Start scanning</button>
+      </div>
+      <div class="tier tier-featured rv">
+        <div class="badge">Most deployed</div>
+        <div class="tname">Operator</div>
+        <div class="tprice"><span class="p">2 SOL</span><span class="per">/ month</span></div>
+        <p class="tfor">For the trenches, at full speed.</p>
+        <ul>
+          <li><b>Unlimited</b> dossiers &amp; DR Scores</li>
+          <li><b>Real-time</b> Telegram alerts</li>
+          <li>Bundle &amp; sniper detection</li>
+          <li>Ghost Match + funding trace</li>
+          <li>Custom dev watchlists</li>
+        </ul>
+        <button class="btn btn-gold" data-launch>Go Operator</button>
+      </div>
+      <div class="tier rv">
+        <div class="tname">Syndicate</div>
+        <div class="tprice"><span class="p">8 SOL</span><span class="per">/ month</span></div>
+        <p class="tfor">For groups, bots and builders.</p>
+        <ul>
+          <li>Everything in Operator</li>
+          <li><b>API + webhooks</b></li>
+          <li>5 seats included</li>
+          <li>Priority trace queue</li>
+          <li>Direct line to the team</li>
+        </ul>
+        <button class="btn btn-line" data-launch>Request access</button>
+      </div>
+    </div>
+    <p class="pnote">Pay in <i>SOL</i> · cancel any epoch · no KYC</p>
+  </div>
+</section>
+
+<section class="section final">
+  <div class="fin-glow" aria-hidden="true"></div>
+  <div class="wrap rv">
+    <span class="label">Open file</span>
+    <h2>The dev already has a record.<br/><span class="goldtx">Read it first.</span></h2>
+    <p class="lede" style="text-align:center">One dossier takes two seconds. One rug takes your whole bag.<br/>The math has never been complicated.</p>
+    <div class="final-actions">
+      <button class="btn btn-gold" data-launch>Launch terminal</button>
+      <a class="btn btn-line" href="#alerts">Get Telegram alerts</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="foot-grid">
+      <div class="foot-brand">
+        <a class="logo" href="#">
+          <span class="glyph" aria-hidden="true"></span>
+          <span class="wordmark">DEV<em>RADAR</em></span>
+        </a>
+        <p>Deployer intelligence for Solana. On-chain history, compiled before your entry.</p>
+      </div>
+      <div class="foot-cols">
+        <div class="fcol">
+          <div class="fh">Product</div>
+          <a data-launch>Terminal</a>
+          <a href="#capabilities">Capabilities</a>
+          <a href="#alerts">Alerts</a>
+          <a href="#pricing">Pricing</a>
+        </div>
+        <div class="fcol">
+          <div class="fh">Ecosystem</div>
+          <a href="#">Fourtis</a>
+          <a href="#">PumpRadar</a>
+          <a href="#">WhaleFlow</a>
+          <a href="#">ApeWise</a>
+        </div>
+        <div class="fcol">
+          <div class="fh">Channels</div>
+          <a href="#">Telegram</a>
+          <a href="#">X / Twitter</a>
+          <a href="#">Status</a>
+        </div>
+      </div>
+    </div>
+    <div class="foot-base">
+      <span>© 2026 DevRadar · A <span class="f">Fourtis</span> ecosystem product</span>
+      <span>On-chain history · Not financial advice</span>
+    </div>
+    <div class="watermark-clip" aria-hidden="true"><div class="watermark">DEVRADAR</div></div>
+  </div>
+</footer>
+
+</div><!-- /view-landing -->
+
+<!-- ████████████████████ TERMINAL VIEW ████████████████████ -->
+<div id="view-terminal">
+
+  <div class="topbar">
+    <button class="btn-icon" data-exit title="Back to site" aria-label="Back to site">←</button>
+    <a class="logo" data-exit style="cursor:pointer">
+      <span class="glyph" aria-hidden="true"></span>
+      <span class="wordmark">DEV<em>RADAR</em></span>
+      <span class="terminal-tag">Terminal</span>
+    </a>
+    <div class="tracebar" role="search">
+      <span class="slash" aria-hidden="true">/</span>
+      <input id="trace-input" type="text" placeholder="Trace any CA or deployer wallet" aria-label="Trace contract address or deployer wallet" />
+      <button class="btn btn-gold" id="trace-btn" type="button">Trace</button>
+    </div>
+    <div class="top-right">
+      <div class="session">
+        <span>Deploys <b id="s-dep">0</b></span>
+        <span class="w">Winners <b id="s-win">0</b></span>
+        <span class="r">Flagged <b id="s-rug">0</b></span>
+      </div>
+      <button class="btn-icon" id="sound-btn" title="Winner alert sound" aria-pressed="false">♪</button>
+      <button class="btn-icon" id="pause-btn" title="Pause feed" aria-pressed="false">❚❚</button>
+      <span class="tierbadge">Operator</span>
+    </div>
+  </div>
+
+  <div class="main">
+    <section class="panel" aria-label="Live deploys">
+      <div class="panel-head">
+        <span class="ph-title"><span class="live-dot" id="feed-dot"></span> Live deploys</span>
+        <span class="ph-sub">Feed latency 0.4s</span>
+        <div class="filters" aria-label="Feed filters">
+          <button class="fpill on" data-f="all">All</button>
+          <button class="fpill" data-f="win">Winners</button>
+          <button class="fpill" data-f="fresh">Fresh</button>
+          <button class="fpill" data-f="rug">Flagged</button>
+        </div>
+      </div>
+      <div class="cols" aria-hidden="true">
+        <span>Time</span><span>Token</span><span class="c-dev">Deployer</span><span>Verdict</span><span class="c-bundle">Bundle</span><span>Score</span><span class="c-act" style="text-align:right">Act</span>
+      </div>
+      <div class="feed scroll" id="feed" role="list"></div>
+    </section>
+
+    <section class="panel" aria-label="Intelligence panel">
+      <div class="tabs">
+        <button class="tab on" data-t="dossier">Dossier</button>
+        <button class="tab" data-t="watch">Watchlist <span id="w-count"></span></button>
+        <button class="tab" data-t="top">Top Devs</button>
+      </div>
+
+      <div class="tabview scroll on" id="tv-dossier">
+        <div class="t-dossier tracing-host" id="t-dossier">
+          <span class="scanline" aria-hidden="true"></span>
+          <div class="d-content" id="td-content">
+            <div class="empty">
+              <div class="ic">◎</div>
+              <p>Select a deploy from the live feed — or trace any CA or wallet above.</p>
+              <div class="mono-hint">Press / to focus trace</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tabview scroll" id="tv-watch"><div id="watchlist"></div></div>
+
+      <div class="tabview scroll" id="tv-top">
+        <div class="lb-head" aria-hidden="true">
+          <span>#</span><span>Deployer</span><span style="text-align:right">Launches</span><span style="text-align:right">Best ATH</span><span style="text-align:right">Score</span>
+        </div>
+        <div id="leaderboard"></div>
+      </div>
+    </section>
+  </div>
+
+  <div class="statusbar">
+    <span class="grp"><span class="dot" aria-hidden="true"></span> Indexing</span>
+    <span class="grp">pump.fun · LaunchLab · Moonshot · Meteora</span>
+    <span class="grp">Ghost Match <span class="gold">Active</span></span>
+    <span class="clock" id="clock">--:--:--</span>
+  </div>
+
+</div><!-- /view-terminal -->
+
+<div class="toasts" id="toasts" aria-live="polite"></div>
+
+<script>
+/* ============================================================
+   SHARED DATA + HELPERS
+============================================================ */
+const DEVS = [
+  {addr:"7xKp····9fQm", verdict:"win", launches:14, rugRate:"0%", ath:"$4.2M", life:"11d",
+   sub:"First seen 14 months ago · pump.fun native",
+   fund:'<span class="k">FUNDING</span> → <span class="a">Binance 8</span> hot wallet · no mixer pattern',
+   priors:[["$CATGPT","peak $4.2M","CLEAN","win"],["$SOLPET","peak $860K","CLEAN","win"],["$NORTH","peak $1.2M","CLEAN","win"]],
+   conf:"98%", base:[82,96]},
+  {addr:"Hf8s····p1Qr", verdict:"win", launches:9, rugRate:"0%", ath:"$2.8M", life:"8d",
+   sub:"First seen 9 months ago · LaunchLab native",
+   fund:'<span class="k">FUNDING</span> → <span class="a">Coinbase</span> withdrawal · clean lineage',
+   priors:[["$DEGENDOG","peak $2.8M","CLEAN","win"],["$SOLBULL","peak $740K","CLEAN","win"],["$GMCAT","peak $510K","CLEAN","win"]],
+   conf:"97%", base:[78,92]},
+  {addr:"Bq2w····7hTe", verdict:"win", launches:22, rugRate:"4%", ath:"$6.1M", life:"15d",
+   sub:"First seen 2 years ago · multi-venue",
+   fund:'<span class="k">FUNDING</span> → <span class="a">OKX</span> hot wallet · long clean history',
+   priors:[["$GIGACHAD","peak $6.1M","CLEAN","win"],["$WIFHAT2","peak $1.9M","CLEAN","win"],["$FOMO","peak $120K","RUG","rug"]],
+   conf:"95%", base:[76,90]},
+  {addr:"Dk3r····x2Vn", verdict:"rug", launches:31, rugRate:"87%", ath:"$310K", life:"41m",
+   sub:"First seen 2 months ago · cluster of 7 wallets",
+   fund:'<span class="k">FUNDING</span> → fresh wallet chain · <span class="a">3 hops</span> from flagged rugger Dk0f····m2Ce',
+   priors:[["$ELONAI","peak $310K","RUG","rug"],["$PEPE2","peak $95K","RUG","rug"],["$SAFEMOON","peak $44K","RUG","rug"]],
+   conf:"99%", base:[4,16]},
+  {addr:"Mn9c····w5Jd", verdict:"rug", launches:18, rugRate:"94%", ath:"$180K", life:"22m",
+   sub:"First seen 3 weeks ago · Ghost Match: 91% to banned dev",
+   fund:'<span class="k">FUNDING</span> → instant-swap chain · <span class="a">mixer pattern</span> detected',
+   priors:[["$SAFEMARS","peak $180K","RUG","rug"],["$BABYDOGE3","peak $61K","RUG","rug"],["$MOONSAFE","peak $29K","RUG","rug"]],
+   conf:"99%", base:[3,12]},
+  {addr:"Rt5v····k8Zx", verdict:"rug", launches:44, rugRate:"81%", ath:"$520K", life:"1.2h",
+   sub:"First seen 5 months ago · serial redeploy pattern",
+   fund:'<span class="k">FUNDING</span> → recycled exit liquidity · <span class="a">2 hops</span> from prior rugs',
+   priors:[["$PEPEKING","peak $520K","RUG","rug"],["$TURBOCAT","peak $210K","RUG","rug"],["$APEMAX","peak $96K","RUG","rug"]],
+   conf:"98%", base:[6,20]},
+  {addr:"Vc1b····q3Ny", verdict:"rug", launches:12, rugRate:"100%", ath:"$88K", life:"18m",
+   sub:"First seen 11 days ago · bundle-heavy launches",
+   fund:'<span class="k">FUNDING</span> → fresh chain · <span class="a">linked</span> to sniper cluster #114',
+   priors:[["$AIDOGE2","peak $88K","RUG","rug"],["$CATWIF","peak $40K","RUG","rug"],["$SOLPUMP","peak $22K","RUG","rug"]],
+   conf:"97%", base:[2,10]},
+  {addr:"9mTw····k4Lp", verdict:"fresh", launches:1, rugRate:"—", ath:"—", life:"—",
+   sub:"First seen 2 hours ago · no prior deploys",
+   fund:'<span class="k">FUNDING</span> → instant-swap inflow <span class="a">2h ago</span> · origin unverified',
+   priors:[], conf:"91%", base:[38,58]},
+  {addr:"3nVc····t7Ws", verdict:"fresh", launches:1, rugRate:"—", ath:"—", life:"—",
+   sub:"First seen 40 minutes ago · Ghost Match: no link found",
+   fund:'<span class="k">FUNDING</span> → <span class="a">CEX</span> withdrawal 1d ago · clean so far',
+   priors:[], conf:"89%", base:[44,62]},
+  {addr:"Jp6d····r2Hb", verdict:"fresh", launches:1, rugRate:"—", ath:"—", life:"—",
+   sub:"First seen 12 minutes ago · wallet age 3 days",
+   fund:'<span class="k">FUNDING</span> → single inflow · origin <span class="a">unverified</span>',
+   priors:[], conf:"86%", base:[35,55]}
+];
+const NAME_A=["GIGA","MOON","SOL","PEPE","DOGE","CAT","FROG","CHAD","BONK","WIF","TURBO","BABY","APE","DEGEN","PUMP","ALPHA","NEKO","HODL"];
+const NAME_B=["AI","INU","CAT","KING","X","2","COIN","WIF","MAX","GPT","BOT","DOG","MOON","LORD","FI"];
+const LORE=["the people's coin","born in the trenches","community takeover","dev is based","one shot one kill","apes together strong","no roadmap only vibes","straight to Raydium","ticker is the utility","first of its meta"];
+const VLABEL={win:"Serial Winner",rug:"Serial Rugger",fresh:"Fresh Wallet"};
+const VSHORT={win:"Winner",rug:"Rugger",fresh:"Fresh"};
+
+const $=s=>document.getElementById(s);
+const rnd=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const reduceMotion=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const scoreClass=n=>n>=70?"hi":n>=40?"mid":"lo";
+function makeCA(){const c="123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";let s="";for(let i=0;i<10;i++)s+=c[rnd(0,c.length-1)];return s.slice(0,4)+"····"+s.slice(6)+"pump"}
+function nowTime(){const d=new Date();return[d.getHours(),d.getMinutes(),d.getSeconds()].map(x=>String(x).padStart(2,"0")).join(":")}
+
+function toast(kind,html){
+  const box=$("toasts");
+  if(box.children.length>3)box.firstChild.remove();
+  const col=kind==="w"?"var(--win)":kind==="r"?"var(--rug)":"var(--gold)";
+  const t=document.createElement("div");
+  t.className="toast";
+  t.innerHTML=`<span class="vd" style="color:${col}"></span><span>${html}</span>`;
+  box.appendChild(t);
+  setTimeout(()=>{t.classList.add("out");setTimeout(()=>t.remove(),420)},3400);
+}
+let actx=null;
+function initAudio(){if(!actx)actx=new(window.AudioContext||window.webkitAudioContext)()}
+function blip(){
+  if(!actx)return;
+  const o=actx.createOscillator(),g=actx.createGain();
+  o.type="sine";o.frequency.value=920;
+  g.gain.setValueAtTime(.05,actx.currentTime);
+  g.gain.exponentialRampToValueAtTime(.0001,actx.currentTime+.18);
+  o.connect(g);g.connect(actx.destination);o.start();o.stop(actx.currentTime+.2);
+}
+function copyCA(ca){
+  const clean=ca.replace(/·/g,"");
+  if(navigator.clipboard)navigator.clipboard.writeText(clean).catch(()=>{});
+  toast("g",`CA copied · <b>${ca}</b>`);
+}
+
+/* ============================================================
+   DEPLOY ENGINE (feeds terminal + landing preview)
+============================================================ */
+const feedEl=$("feed"),previewEl=$("preview");
+let filter="all",paused=false,soundOn=false,activeRow=null;
+const stats={dep:0,win:0,rug:0};
+const lastDeployByDev={};
+
+function makeDeploy(){
+  const r=Math.random();
+  const dev=r<.22?pick(DEVS.filter(d=>d.verdict==="win"))
+          :r<.62?pick(DEVS.filter(d=>d.verdict==="rug"))
+          :pick(DEVS.filter(d=>d.verdict==="fresh"));
+  const bundle=dev.verdict==="win"?rnd(1,6):dev.verdict==="rug"?rnd(18,45):rnd(2,25);
+  return{dev,tk:"$"+pick(NAME_A)+pick(NAME_B),name:pick(LORE),bundle,
+    snipers:dev.verdict==="win"?"LOW":dev.verdict==="rug"?pick(["HIGH","HIGH","MED"]):pick(["LOW","MED"]),
+    score:rnd(dev.base[0],dev.base[1]),ca:makeCA(),time:nowTime(),ts:Date.now()};
+}
+
+function rowHTML(d){
+  return`<span class="time">${d.time}</span>
+  <span class="tok"><div class="tk">${d.tk}</div><div class="nm">${d.name}</div></span>
+  <span class="dev">${d.dev.addr}</span>
+  <span><span class="verdict ${d.dev.verdict}"><span class="vd"></span>${VSHORT[d.dev.verdict]}</span></span>
+  <span class="bundle ${d.bundle>=18?"hot":""}">${d.bundle}%</span>
+  <span class="score ${scoreClass(d.score)}">${d.score}</span>
+  <span class="act"><span data-act="copy" title="Copy CA">⧉</span><span data-act="chart" title="Open chart">↗</span></span>`;
+}
+
+function addDeploy(notify=true){
+  const d=makeDeploy();
+  lastDeployByDev[d.dev.addr]=d;
+
+  /* terminal row */
+  const row=document.createElement("div");
+  row.className="row"+(reduceMotion||!notify?"":" flash");
+  row.dataset.verdict=d.dev.verdict;
+  row.innerHTML=rowHTML(d);
+  row.__deploy=d;
+  row.style.display=(filter==="all"||filter===d.dev.verdict)?"":"none";
+  row.addEventListener("click",e=>{
+    const act=e.target.dataset&&e.target.dataset.act;
+    if(act==="copy"){copyCA(d.ca);e.stopPropagation();return}
+    if(act==="chart"){toast("g",`<b>${d.tk}</b> · opening chart`);e.stopPropagation();return}
+    selectRow(row);
+  });
+  feedEl.prepend(row);
+  while(feedEl.children.length>40)feedEl.lastChild.remove();
+
+  /* landing preview row */
+  const pv=document.createElement("div");
+  pv.className="pv-row"+(reduceMotion||!notify?"":" flash");
+  pv.innerHTML=`<span class="time">${d.time}</span>
+    <span><div class="tk">${d.tk}</div><div class="nm">${d.dev.addr} · ${d.name}</div></span>
+    <span><span class="verdict ${d.dev.verdict}"><span class="vd"></span>${VSHORT[d.dev.verdict]}</span></span>
+    <span class="score ${scoreClass(d.score)}">${d.score}</span>`;
+  previewEl.prepend(pv);
+  while(previewEl.children.length>8)previewEl.lastChild.remove();
+
+  /* stats + notifications */
+  stats.dep++;
+  if(d.dev.verdict==="win"){stats.win++;if(notify&&document.body.classList.contains("app")){toast("w",`PROVEN DEPLOYER LIVE · <b>${d.tk}</b>`);if(soundOn)blip()}}
+  if(d.dev.verdict==="rug")stats.rug++;
+  $("s-dep").textContent=stats.dep;
+  $("s-win").textContent=stats.win;
+  $("s-rug").textContent=stats.rug;
+  refreshWatchlist();
+}
+
+function loop(){
+  if(!paused)addDeploy();
+  setTimeout(loop,rnd(1900,4300));
+}
+
+/* ============================================================
+   TERMINAL — DOSSIER / WATCHLIST / LEADERBOARD
+============================================================ */
+const tDossier=$("t-dossier");
+const watch=new Set(["7xKp····9fQm"]);
+
+function fabricateFor(dev){
+  return{dev,tk:"$"+pick(NAME_A)+pick(NAME_B),name:pick(LORE),
+    bundle:dev.verdict==="win"?rnd(1,6):dev.verdict==="rug"?rnd(18,45):rnd(2,25),
+    snipers:dev.verdict==="win"?"LOW":dev.verdict==="rug"?"HIGH":"MED",
+    score:rnd(dev.base[0],dev.base[1]),ca:makeCA(),time:nowTime(),ts:Date.now()};
+}
+
+function dossierHTML(d){
+  const dev=d.dev;
+  const priors=[
+    `<div class="prior"><span class="t">${d.tk}</span><span class="m">deployed just now</span><span class="o live">LIVE</span></div>`,
+    ...dev.priors.map(p=>`<div class="prior"><span class="t">${p[0]}</span><span class="m">${p[1]}</span><span class="o ${p[3]}">${p[2]}</span></div>`)
+  ].join("");
+  const followed=watch.has(dev.addr);
+  return`
+  <div class="d-file">
+    <span class="t">Dossier · DR-2026-${rnd(100000,209999)}</span>
+    <span class="d-score"><span class="n score ${scoreClass(d.score)}">${d.score}</span><span class="l">DR Score</span></span>
+  </div>
+  <div class="d-id">
+    <div>
+      <div class="d-wallet">${dev.addr} <span class="cp" data-ca="${d.ca}" title="Copy CA">⧉</span></div>
+      <div class="d-sub">${dev.sub}</div>
+    </div>
+    <span class="verdict ${dev.verdict}"><span class="vd"></span>${VLABEL[dev.verdict]}</span>
+  </div>
+  <div class="d-token">
+    <span><span class="tk">${d.tk}</span> &nbsp;<span class="nm">${d.name}</span></span>
+    <span class="open">Chart ↗</span>
+  </div>
+  <div class="d-stats">
+    <div class="ds"><div class="k">Launches</div><div class="v">${dev.launches}</div></div>
+    <div class="ds"><div class="k">Rug rate</div><div class="v ${dev.verdict==="win"?"good":dev.verdict==="rug"?"bad":""}">${dev.rugRate}</div></div>
+    <div class="ds"><div class="k">Best ATH</div><div class="v">${dev.ath}</div></div>
+    <div class="ds"><div class="k">Lifespan</div><div class="v">${dev.life}</div></div>
+  </div>
+  <div class="d-risk">
+    <div class="dr"><span class="k">Bundle</span><span class="v ${d.bundle>=18?"bad":d.bundle>=10?"warn":"ok"}">${d.bundle}%</span></div>
+    <div class="dr"><span class="k">Snipers</span><span class="v ${d.snipers==="HIGH"?"bad":d.snipers==="MED"?"warn":"ok"}">${d.snipers}</span></div>
+  </div>
+  <div class="d-fund">${dev.fund}</div>
+  <div class="d-ph">Launch history</div>
+  <div>${priors}</div>
+  <div class="d-actions">
+    <button class="btn ${followed?"btn-line":"btn-gold"}" id="follow-btn" data-addr="${dev.addr}">${followed?"Following ✓":"Follow dev"}</button>
+    <button class="btn btn-line" id="alert-btn">Set alert</button>
+  </div>
+  <div class="d-conf"><span>Trace <b>${(rnd(12,22)/10).toFixed(1)}s</b></span><span>Confidence <b>${dev.conf}</b></span></div>`;
+}
+
+function openDossier(d){
+  setTab("dossier");
+  const swap=()=>{$("td-content").innerHTML=dossierHTML(d);bindDossier(d)};
+  if(reduceMotion){swap();return}
+  tDossier.classList.add("tracing");
+  setTimeout(swap,380);
+  setTimeout(()=>tDossier.classList.remove("tracing"),920);
+}
+
+function bindDossier(d){
+  $("follow-btn").addEventListener("click",function(){
+    const a=this.dataset.addr;
+    if(watch.has(a)){watch.delete(a);this.textContent="Follow dev";this.className="btn btn-gold";toast("g",`Unfollowed <b>${a}</b>`)}
+    else{watch.add(a);this.textContent="Following ✓";this.className="btn btn-line";toast("g",`Following <b>${a}</b> — pinged on deploy`)}
+    refreshWatchlist();
+  });
+  $("alert-btn").addEventListener("click",()=>toast("g",`Alert armed for <b>${d.dev.addr}</b> via Telegram`));
+  document.querySelectorAll("#td-content .cp").forEach(el=>el.addEventListener("click",()=>copyCA(el.dataset.ca)));
+  const open=document.querySelector("#td-content .d-token .open");
+  if(open)open.addEventListener("click",()=>toast("g",`<b>${d.tk}</b> · opening chart`));
+}
+
+function selectRow(row){
+  if(activeRow)activeRow.classList.remove("active");
+  activeRow=row;row.classList.add("active");
+  openDossier(row.__deploy);
+}
+
+function refreshWatchlist(){
+  $("w-count").textContent=watch.size?`(${watch.size})`:"";
+  const box=$("watchlist");
+  if(!watch.size){box.innerHTML=`<div class="empty"><div class="ic">◉</div><p>No devs followed yet. Open a dossier and hit Follow.</p></div>`;return}
+  box.innerHTML=[...watch].map(addr=>{
+    const dev=DEVS.find(x=>x.addr===addr);
+    const last=lastDeployByDev[addr];
+    const ago=last?Math.max(1,Math.round((Date.now()-last.ts)/60000)):null;
+    const meta=last?`<span class="hot">deployed ${last.tk} · ${ago}m ago</span>`:"idle · watching";
+    return`<div class="witem" data-addr="${addr}">
+      <div class="info"><div class="addr">${addr}</div><div class="meta">${meta}</div></div>
+      <span class="verdict ${dev.verdict}"><span class="vd"></span>${VSHORT[dev.verdict]}</span>
+      <button class="unf" data-addr="${addr}" title="Unfollow">✕</button>
+    </div>`;
+  }).join("");
+  box.querySelectorAll(".witem").forEach(el=>{
+    el.addEventListener("click",e=>{
+      if(e.target.classList.contains("unf")){watch.delete(e.target.dataset.addr);refreshWatchlist();return}
+      const addr=el.dataset.addr;
+      openDossier(lastDeployByDev[addr]||fabricateFor(DEVS.find(x=>x.addr===addr)));
+    });
+  });
+}
+
+function buildLeaderboard(){
+  const ranked=[...DEVS].map(d=>({...d,s:Math.round((d.base[0]+d.base[1])/2)})).sort((a,b)=>b.s-a.s).slice(0,8);
+  $("leaderboard").innerHTML=ranked.map((d,i)=>`
+    <div class="lrow" data-addr="${d.addr}">
+      <span class="rk">${String(i+1).padStart(2,"0")}</span>
+      <span><div class="addr">${d.addr}</div><div class="sub">${VLABEL[d.verdict]} · rug ${d.rugRate}</div></span>
+      <span class="num">${d.launches}</span>
+      <span class="num ath">${d.ath}</span>
+      <span class="num score ${scoreClass(d.s)}">${d.s}</span>
+    </div>`).join("");
+  document.querySelectorAll(".lrow").forEach(el=>{
+    el.addEventListener("click",()=>{
+      const dev=DEVS.find(x=>x.addr===el.dataset.addr);
+      openDossier(lastDeployByDev[dev.addr]||fabricateFor(dev));
+    });
+  });
+}
+
+function setTab(name){
+  document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("on",t.dataset.t===name));
+  document.querySelectorAll(".tabview").forEach(v=>v.classList.toggle("on",v.id==="tv-"+name));
+}
+document.querySelectorAll(".tab").forEach(t=>t.addEventListener("click",()=>setTab(t.dataset.t)));
+
+document.querySelectorAll(".fpill").forEach(p=>{
+  p.addEventListener("click",()=>{
+    document.querySelectorAll(".fpill").forEach(x=>x.classList.remove("on"));
+    p.classList.add("on");filter=p.dataset.f;
+    document.querySelectorAll(".row").forEach(r=>{
+      r.style.display=(filter==="all"||r.dataset.verdict===filter)?"":"none";
+    });
+  });
+});
+
+$("pause-btn").addEventListener("click",function(){
+  paused=!paused;
+  this.textContent=paused?"▶":"❚❚";
+  this.classList.toggle("on",paused);
+  this.setAttribute("aria-pressed",paused);
+  $("feed-dot").classList.toggle("paused",paused);
+  toast("g",paused?"Feed paused":"Feed live");
+});
+$("sound-btn").addEventListener("click",function(){
+  soundOn=!soundOn;
+  this.classList.toggle("on",soundOn);
+  this.setAttribute("aria-pressed",soundOn);
+  if(soundOn)initAudio();
+  toast("g",soundOn?"Winner sound <b>on</b>":"Winner sound off");
+});
+
+function runTrace(v){
+  v=(v!==undefined?v:$("trace-input").value).trim();
+  if(!v)return;
+  openDossier(fabricateFor(pick(DEVS)));
+  toast("g",`Tracing <b>${v.slice(0,14)}…</b>`);
+  $("trace-input").value="";
+}
+$("trace-btn").addEventListener("click",()=>runTrace());
+$("trace-input").addEventListener("keydown",e=>{if(e.key==="Enter")runTrace()});
+document.addEventListener("keydown",e=>{
+  if(e.key==="/"&&document.body.classList.contains("app")&&document.activeElement!==$("trace-input")){e.preventDefault();$("trace-input").focus()}
+  if(e.key==="Escape"&&document.body.classList.contains("app"))closeApp();
+});
+
+setInterval(()=>{$("clock").textContent=nowTime()},1000);
+$("clock").textContent=nowTime();
+
+/* ============================================================
+   ROUTER — landing ↔ terminal
+============================================================ */
+function openApp(traceValue){
+  document.body.classList.add("app");
+  if(location.hash!=="#app")history.pushState(null,"","#app");
+  if(!activeRow){const first=feedEl.querySelector(".row");if(first)selectRow(first)}
+  if(traceValue){$("trace-input").value=traceValue;runTrace(traceValue)}
+}
+function closeApp(){
+  document.body.classList.remove("app");
+  if(location.hash==="#app")history.pushState(null,"","#");
+}
+window.addEventListener("popstate",()=>{
+  document.body.classList.toggle("app",location.hash==="#app");
+});
+document.querySelectorAll("[data-launch]").forEach(el=>el.addEventListener("click",()=>openApp()));
+document.querySelectorAll("[data-exit]").forEach(el=>el.addEventListener("click",closeApp));
+
+/* hero trace → straight into terminal */
+function heroTrace(){
+  const v=$("hero-trace").value.trim();
+  openApp(v||undefined);
+}
+$("hero-trace-btn").addEventListener("click",heroTrace);
+$("hero-trace").addEventListener("keydown",e=>{if(e.key==="Enter")heroTrace()});
+
+/* ============================================================
+   LANDING — hero dossier cycling
+============================================================ */
+const LP=[
+  {file:"Dossier · DR-2026-184302",wallet:"7xKp····9fQm",sub:"First seen 14 months ago · pump.fun native",
+   verdict:{t:"Serial Winner",cls:"win"},launch:"14",rug:{v:"0%",cls:"good"},ath:"$4.2M",life:"11d",
+   fund:'<span class="k">FUNDING</span> → <span class="a">Binance 8</span> hot wallet · 3d before first deploy · no mixer pattern',
+   priors:[["$CATGPT","peak $4.2M","CLEAN","win"],["$SOLPET","peak $860K","CLEAN","win"],["$NORTH","peak $1.2M","LIVE","live"]],
+   time:"1.8s",conf:"98%"},
+  {file:"Dossier · DR-2026-091774",wallet:"Dk3r····x2Vn",sub:"First seen 2 months ago · cluster of 7 wallets",
+   verdict:{t:"Serial Rugger",cls:"rug"},launch:"31",rug:{v:"87%",cls:"bad"},ath:"$310K",life:"41m",
+   fund:'<span class="k">FUNDING</span> → fresh wallet chain · <span class="a">3 hops</span> from flagged rugger Dk0f····m2Ce',
+   priors:[["$ELONAI","peak $310K","RUG","rug"],["$PEPE2","peak $95K","RUG","rug"],["$SAFEMOON","peak $44K","RUG","rug"]],
+   time:"1.6s",conf:"99%"},
+  {file:"Dossier · DR-2026-201118",wallet:"9mTw····k4Lp",sub:"First seen 2 hours ago · no prior deploys",
+   verdict:{t:"Fresh Wallet",cls:"fresh"},launch:"1",rug:{v:"—",cls:""},ath:"—",life:"—",
+   fund:'<span class="k">FUNDING</span> → instant-swap inflow <span class="a">2h ago</span> · origin unverified · unproven',
+   priors:[["$MOONCAT","deployed 4m ago","LIVE","live"]],
+   time:"1.7s",conf:"91%"}
+];
+const lpCard=$("lp-dossier");
+let lpi=0;
+function lpRender(p){
+  $("lp-file").textContent=p.file;
+  $("lp-wallet").textContent=p.wallet;
+  $("lp-sub").textContent=p.sub;
+  const v=$("lp-verdict");v.className="verdict "+p.verdict.cls;
+  $("lp-verdict-t").textContent=p.verdict.t;
+  $("lp-launch").textContent=p.launch;
+  const r=$("lp-rug");r.textContent=p.rug.v;r.className="v "+p.rug.cls;
+  $("lp-ath").textContent=p.ath;
+  $("lp-life").textContent=p.life;
+  $("lp-fund").innerHTML=p.fund;
+  $("lp-priors").innerHTML=p.priors.map(x=>`<div class="prior"><span class="t">${x[0]}</span><span class="m">${x[1]}</span><span class="o ${x[3]}">${x[2]}</span></div>`).join("");
+  $("lp-time").textContent=p.time;
+  $("lp-conf").textContent=p.conf;
+}
+if(!reduceMotion){
+  setInterval(()=>{
+    if(document.body.classList.contains("app"))return;
+    lpi=(lpi+1)%LP.length;
+    lpCard.classList.add("tracing");
+    setTimeout(()=>lpRender(LP[lpi]),430);
+    setTimeout(()=>lpCard.classList.remove("tracing"),980);
+  },5600);
+  lpCard.addEventListener("mousemove",e=>{
+    const r=lpCard.getBoundingClientRect();
+    lpCard.style.setProperty("--mx",(e.clientX-r.left)+"px");
+    lpCard.style.setProperty("--my",(e.clientY-r.top)+"px");
+  });
+}
+
+/* ============================================================
+   LANDING — nav / ticker / reveals
+============================================================ */
+const navEl=$("nav");
+const onScroll=()=>navEl.classList.toggle("scrolled",window.scrollY>24);
+window.addEventListener("scroll",onScroll,{passive:true});onScroll();
+
+const track=$("ticker-track");track.innerHTML+=track.innerHTML;
+
+document.querySelectorAll(".hl").forEach((el,i)=>setTimeout(()=>el.classList.add("in"),120+i*110));
+const io=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add("in");io.unobserve(e.target)}});
+},{threshold:.12});
+document.querySelectorAll(".rv:not(.hl)").forEach(el=>io.observe(el));
+
+/* ============================================================
+   BOOT
+============================================================ */
+for(let i=0;i<9;i++)addDeploy(false);
+refreshWatchlist();
+buildLeaderboard();
+loop();
+if(location.hash==="#app")openApp();
+</script>
+</body>
+</html>

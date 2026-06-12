@@ -1,0 +1,34 @@
+{
+  "name": "devradar",
+  "private": true,
+  "version": "0.1.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "db:generate": "pnpm --filter @devradar/db generate",
+    "db:migrate": "pnpm --filter @devradar/db migrate",
+    "db:push": "pnpm --filter @devradar/db push",
+    "db:seed": "pnpm --filter @devradar/db seed",
+    "dev:web": "pnpm --filter @devradar/web dev",
+    "dev:worker": "pnpm --filter @devradar/worker dev",
+    "build": "pnpm -r build",
+    "test": "pnpm -r test",
+    "typecheck": "pnpm -r typecheck",
+    "replay": "pnpm --filter @devradar/worker replay"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.4"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@prisma/client",
+      "@prisma/engines",
+      "esbuild",
+      "prisma"
+    ],
+    "overrides": {
+      "ioredis": "5.11.1"
+    }
+  }
+}
