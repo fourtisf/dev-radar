@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="500" viewBox="0 0 1500 500">
+  
+  <defs>
+    <filter id="blur1" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="7"/></filter>
+    <filter id="blur2" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="14"/></filter>
+    <radialGradient id="glowGb" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="rgba(226,182,91,0.20)"/>
+      <stop offset="55%" stop-color="rgba(226,182,91,0.07)"/>
+      <stop offset="100%" stop-color="rgba(226,182,91,0)"/>
+    </radialGradient>
+    <linearGradient id="goldTxb" x1="0%" y1="0%" x2="100%" y2="18%">
+      <stop offset="0%" stop-color="#F4D789"/>
+      <stop offset="55%" stop-color="#E2B65B"/>
+      <stop offset="100%" stop-color="#B9893A"/>
+    </linearGradient>
+  </defs>
+  <rect width="1500" height="500" fill="#060607"/>
+  <circle cx="1188" cy="244" r="560" fill="url(#glowGb)"/>
+  <circle cx="1188" cy="244" r="340.20000000000005" fill="none" stroke="rgba(255,255,255,0.045)" stroke-width="1.4"/><circle cx="1188" cy="244" r="436.20000000000005" fill="none" stroke="rgba(255,255,255,0.045)" stroke-width="1.4"/><circle cx="1188" cy="244" r="532.2" fill="none" stroke="rgba(255,255,255,0.045)" stroke-width="1.4"/><circle cx="1188" cy="244" r="628.2" fill="none" stroke="rgba(255,255,255,0.045)" stroke-width="1.4"/><circle cx="1188" cy="244" r="724.2" fill="none" stroke="rgba(255,255,255,0.045)" stroke-width="1.4"/>
+  <circle cx="1188" cy="244" r="252" fill="none" stroke="rgba(244,215,137,0.41400000000000003)" stroke-width="2.016"/><circle cx="1188" cy="244" r="200.34" fill="none" stroke="rgba(226,182,91,0.2208)" stroke-width="1.386"/><circle cx="1188" cy="244" r="142.38" fill="none" stroke="rgba(226,182,91,0.138)" stroke-width="1.386"/><circle cx="1188" cy="244" r="81.396" fill="none" stroke="rgba(226,182,91,0.1012)" stroke-width="1.386"/><line x1="1451.34" y1="244" x2="1466.46" y2="244" stroke="rgba(156,154,147,0.46)" stroke-width="2.016"/><line x1="1188" y1="507.34" x2="1188" y2="522.46" stroke="rgba(156,154,147,0.46)" stroke-width="2.016"/><line x1="924.6600000000001" y1="244.00000000000003" x2="909.54" y2="244.00000000000003" stroke="rgba(156,154,147,0.46)" stroke-width="2.016"/><line x1="1188" y1="-19.339999999999975" x2="1188" y2="-34.45999999999998" stroke="rgba(156,154,147,0.46)" stroke-width="2.016"/><path d="M 1188 244 L 1313.2374381789439 25.323105751030027 A 252 252 0 0 1 1343.1466917820658 45.421290091106044 Z" fill="#E2B65B" opacity="0.500"/><path d="M 1188 244 L 1280.7673872765388 9.696325556160645 A 252 252 0 0 1 1313.2374381789439 25.323105751030027 Z" fill="#E2B65B" opacity="0.424"/><path d="M 1188 244 L 1246.4004716805277 -1.139521308767911 A 252 252 0 0 1 1280.7673872765388 9.696325556160645 Z" fill="#E2B65B" opacity="0.354"/><path d="M 1188 244 L 1210.8394102098407 -6.962868451224523 A 252 252 0 0 1 1246.4004716805277 -1.139521308767911 Z" fill="#E2B65B" opacity="0.289"/><path d="M 1188 244 L 1174.8113390267781 -7.654642758152619 A 252 252 0 0 1 1210.8394102098407 -6.962868451224523 Z" fill="#E2B65B" opacity="0.231"/><path d="M 1188 244 L 1139.052943492567 -3.200699147996289 A 252 252 0 0 1 1174.8113390267781 -7.654642758152619 Z" fill="#E2B65B" opacity="0.180"/><path d="M 1188 244 L 1104.2953947653068 6.307890197204529 A 252 252 0 0 1 1139.052943492567 -3.200699147996289 Z" fill="#E2B65B" opacity="0.134"/><path d="M 1188 244 L 1071.249399149795 20.676698033733857 A 252 252 0 0 1 1104.2953947653068 6.307890197204529 Z" fill="#E2B65B" opacity="0.095"/><path d="M 1188 244 L 1040.5906659032219 39.61191761468962 A 252 252 0 0 1 1071.249399149795 20.676698033733857 Z" fill="#E2B65B" opacity="0.062"/><path d="M 1188 244 L 1012.9460906443328 62.726370314659846 A 252 252 0 0 1 1040.5906659032219 39.61191761468962 Z" fill="#E2B65B" opacity="0.036"/><path d="M 1188 244 L 988.8809368813261 89.54742247944984 A 252 252 0 0 1 1012.9460906443328 62.726370314659846 Z" fill="#E2B65B" opacity="0.017"/><path d="M 1188 244 L 968.8872777646849 119.5266496207737 A 252 252 0 0 1 988.8809368813261 89.54742247944984 Z" fill="#E2B65B" opacity="0.004"/>
+    <line x1="1188" y1="244" x2="1343.1466917820658" y2="45.421290091106044" stroke="#F4D789" stroke-width="5.544" opacity="0.85" filter="url(#blur1)"/>
+    <line x1="1188" y1="244" x2="1343.1466917820658" y2="45.421290091106044" stroke="#F4D789" stroke-width="2.772" opacity="1"/>
+    <circle cx="1188" cy="244" r="22.68" fill="#E2B65B" opacity="0.55" filter="url(#blur2)"/>
+    <circle cx="1188" cy="244" r="29.735999999999997" fill="none" stroke="rgba(226,182,91,0.35)" stroke-width="1.386"/>
+    <circle cx="1188" cy="244" r="10.835999999999999" fill="#F4D789"/>
+      <circle cx="1249.4099318340827" cy="84.0216581154395" r="15.624" fill="#5CDD94" opacity="0.5" filter="url(#blur2)"/>
+      <circle cx="1249.4099318340827" cy="84.0216581154395" r="8.568000000000001" fill="#5CDD94"/>
+      <circle cx="1249.4099318340827" cy="84.0216581154395" r="17.136000000000003" fill="none" stroke="rgba(92,221,148,0.45)" stroke-width="1.512"/>
+      <circle cx="992.1975418076045" cy="348.1100137633992" r="5.544" fill="#F2555C" opacity="0.85"/>
+      <circle cx="992.1975418076045" cy="348.1100137633992" r="11.592" fill="none" stroke="rgba(242,85,92,0.35)" stroke-width="1.26"/>
+
+  <!-- wordmark -->
+  <text x="96" y="96" font-family="Geist Mono" font-weight="700" font-size="30" letter-spacing="5" fill="#F4F2EC">DEV<tspan fill="#E2B65B">RADAR</tspan><tspan fill="#5F5D58" font-size="21" font-weight="500">  ·  DEVRADAR.ORG</tspan></text>
+
+  <!-- label -->
+  <circle cx="103" cy="171" r="5.5" fill="#E2B65B"/>
+  <circle cx="103" cy="171" r="11" fill="#E2B65B" opacity="0.35" filter="url(#blur1)"/>
+  <text x="126" y="179" font-family="Geist Mono" font-weight="600" font-size="21" letter-spacing="7" fill="#E2B65B">DEPLOYER INTELLIGENCE · SOLANA</text>
+
+  <!-- headline -->
+  <text x="92" y="286" font-family="Geist Mono" font-weight="600" font-size="78" letter-spacing="-2" fill="#F4F2EC">KNOW THE DEV</text>
+  <text x="92" y="378" font-family="Geist Mono" font-weight="600" font-size="78" letter-spacing="-2" fill="#F4F2EC">BEFORE <tspan fill="url(#goldTxb)">YOU APE.</tspan></text>
+
+  <!-- stat line (kept above the avatar overlap zone) -->
+  <text x="96" y="441" font-family="Geist Mono" font-weight="500" font-size="20" letter-spacing="3" fill="#9C9A93">LAUNCHES · RUGS · BUNDLES · FUNDING <tspan fill="#5F5D58">— ONE DOSSIER, UNDER 2S</tspan></text>
+</svg>
