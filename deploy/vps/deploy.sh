@@ -23,6 +23,7 @@ TARBALL="${TARBALL:-/root/devradar.tgz}"
 APP_DIR="${APP_DIR:-/opt/devradar}"
 BACKUP_DIR="/root/backups"
 PUBLIC_IP="$(hostname -I | awk '{print $1}')"
+STAMP="$(date +%Y%m%d-%H%M%S)"
 
 log()  { echo -e "\n\033[1;33m── $*\033[0m"; }
 ok()   { echo -e "\033[1;32m   ✓ $*\033[0m"; }
@@ -34,7 +35,6 @@ fail() { echo -e "\033[1;31m   ✗ $*\033[0m"; exit 1; }
 if [ "${KEEP_OLD:-0}" != "1" ] && command -v pm2 >/dev/null 2>&1; then
   log "Backing up + removing old pm2 apps"
   mkdir -p "$BACKUP_DIR"
-  STAMP="$(date +%Y%m%d-%H%M%S)"
 
   # Old app folders, taken from pm2's own process metadata (cwd).
   mapfile -t OLD_DIRS < <(pm2 jlist 2>/dev/null \
@@ -89,6 +89,35 @@ if [ "$TOTAL_MEM_MB" -lt 3800 ] && [ ! -f /swapfile ]; then
   ok "swap on"
 fi
 
+# ── 2.5 Free the ports DevRadar needs ────────────────────────────
+log "Freeing ports 5432 / 6379 / 3000 / 8787"
+mkdir -p "$BACKUP_DIR"
+# host-level services from old stacks
+systemctl disable --now redis-server redis postgresql 2>/dev/null || true
+pkill -x redis-server 2>/dev/null || true
+# leftover docker state from previous attempts of THIS stack
+(cd "$APP_DIR" 2>/dev/null && docker compose down --remove-orphans >/dev/null 2>&1) || true
+# old-project containers still publishing our ports (volumes are kept)
+for port in 5432 6379 3000 8787; do
+  for c in $(docker ps -q --filter "publish=${port}"); do
+    name="$(docker inspect -f '{{.Name}}' "$c" | tr -d '/')"
+    case "$name" in
+      devradar-*) ;;
+      *) docker rm -f "$c" >/dev/null && ok "removed old container ${name} (held :${port})" ;;
+    esac
+  done
+done
+rm -f "$APP_DIR/dump.rdb" 2>/dev/null || true
+sleep 1
+for port in 6379 5432; do
+  if ss -ltn | awk '{print $4}' | grep -qE ":${port}$"; then
+    echo "   process holding :${port} →"
+    ss -ltnp | grep ":${port}" || true
+    fail "port ${port} still busy — stop that process, then re-run this script"
+  fi
+done
+ok "ports free"
+
 # ── 3. Code ──────────────────────────────────────────────────────
 if [ -f "$TARBALL" ]; then
   log "Extracting code → $APP_DIR"
@@ -139,6 +168,23 @@ log "Smoke test"
 sleep 3
 curl -fsS  http://localhost:8787/health >/dev/null && ok "worker  :8787 /health" || fail "worker not responding — docker compose --profile prod logs worker"
 curl -fsS  http://localhost:3000/api/me >/dev/null && ok "web     :3000 /api/me" || fail "web not responding — docker compose --profile prod logs web"
+
+# ── 7. Nginx: port 80 → DevRadar (old vhosts backed up) ─────────
+if command -v nginx >/dev/null 2>&1; then
+  log "Nginx"
+  mkdir -p "$BACKUP_DIR/nginx-$STAMP"
+  cp -r /etc/nginx/sites-enabled "$BACKUP_DIR/nginx-$STAMP/" 2>/dev/null || true
+  rm -f /etc/nginx/sites-enabled/*
+  sed 's/server_name devradar.example;/server_name _;/' "$APP_DIR/deploy/nginx/devradar.conf" \
+    > /etc/nginx/sites-available/devradar.conf
+  ln -sf /etc/nginx/sites-available/devradar.conf /etc/nginx/sites-enabled/devradar.conf
+  if nginx -t >/dev/null 2>&1; then
+    systemctl reload nginx 2>/dev/null || systemctl restart nginx 2>/dev/null || true
+    ok "port 80 → DevRadar (old configs in $BACKUP_DIR/nginx-$STAMP)"
+  else
+    echo "   nginx config test failed — app still reachable on :3000"
+  fi
+fi
 
 cat <<EOF
 
