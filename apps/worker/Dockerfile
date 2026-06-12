@@ -3,12 +3,17 @@
 # Build from the REPO ROOT: docker build -f apps/worker/Dockerfile .
 
 FROM node:20-alpine
-RUN corepack enable
+# npm-installed pnpm (corepack in this base image fails signature
+# checks on newer pnpm); openssl/libc6-compat for prisma engines.
+RUN apk add --no-cache openssl libc6-compat && npm i -g pnpm@10.33.0
 WORKDIR /app
 
+# pnpm needs every workspace manifest present for a frozen-lockfile
+# install, even when filtering.
 COPY pnpm-workspace.yaml package.json pnpm-lock.yaml ./
 COPY packages/db/package.json packages/db/
 COPY apps/worker/package.json apps/worker/
+COPY apps/web/package.json apps/web/
 RUN pnpm install --frozen-lockfile --filter @devradar/worker... --filter .
 
 COPY tsconfig.base.json ./
