@@ -29,7 +29,6 @@ ok()   { echo -e "\033[1;32m   ✓ $*\033[0m"; }
 fail() { echo -e "\033[1;31m   ✗ $*\033[0m"; exit 1; }
 
 [ "$(id -u)" = "0" ] || fail "run as root"
-[ -f "$TARBALL" ] || fail "upload devradar.tgz to /root first (drag & drop in VS Code explorer)"
 
 # ── 1. Old project: backup → stop → remove ──────────────────────
 if [ "${KEEP_OLD:-0}" != "1" ] && command -v pm2 >/dev/null 2>&1; then
@@ -55,10 +54,18 @@ if [ "${KEEP_OLD:-0}" != "1" ] && command -v pm2 >/dev/null 2>&1; then
   pm2 save --force >/dev/null 2>&1 || true
   ok "pm2 apps stopped & removed from startup list"
 
+  # Fallback: catch old project folders even if pm2 metadata was empty.
+  for g in /root/pumpterminal* /opt/pumpterminal* /var/www/pumpterminal* /home/*/pumpterminal*; do
+    [ -d "$g" ] && OLD_DIRS+=("$g")
+  done
+
   for d in "${OLD_DIRS[@]}"; do
     if [ -d "$d" ] && [ "$d" != "/" ] && [ "$d" != "/root" ] && [ "$d" != "$APP_DIR" ]; then
+      name="$(basename "$d")"
+      [ -f "$BACKUP_DIR/${name}-${STAMP}.tgz" ] || tar czf "$BACKUP_DIR/${name}-${STAMP}.tgz" -C "$(dirname "$d")" "$name" \
+        --exclude="$name/node_modules" --exclude="$name/.next" 2>/dev/null || true
       rm -rf "$d"
-      ok "removed: $d"
+      ok "removed: $d (backup in $BACKUP_DIR)"
     fi
   done
 else
@@ -83,9 +90,15 @@ if [ "$TOTAL_MEM_MB" -lt 3800 ] && [ ! -f /swapfile ]; then
 fi
 
 # ── 3. Code ──────────────────────────────────────────────────────
-log "Extracting code → $APP_DIR"
-mkdir -p "$APP_DIR"
-tar xzf "$TARBALL" -C "$APP_DIR" --strip-components=0
+if [ -f "$TARBALL" ]; then
+  log "Extracting code → $APP_DIR"
+  mkdir -p "$APP_DIR"
+  tar xzf "$TARBALL" -C "$APP_DIR" --strip-components=0
+elif [ -f "$APP_DIR/package.json" ]; then
+  log "Code already present in $APP_DIR"
+else
+  fail "no code found — extract the repo to $APP_DIR first"
+fi
 ok "$(ls "$APP_DIR" | tr '\n' ' ')"
 
 # ── 4. .env ──────────────────────────────────────────────────────
