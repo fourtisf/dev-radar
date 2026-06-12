@@ -43,11 +43,12 @@ export async function handleLaunchEvent(ev: LaunchEvent): Promise<void> {
   });
 
   await Promise.all([
-    backfillQueue.add('backfill', { wallet: ev.deployer }, { jobId: `bf:${ev.deployer}` }),
+    // NB: BullMQ custom job ids must not contain ':' — base58 ids are safe with '-'.
+    backfillQueue.add('backfill', { wallet: ev.deployer }, { jobId: `bf-${ev.deployer}` }),
     launchAnalysisQueue.add(
       'analyze',
       { mint: ev.mint, deployer: ev.deployer, slot: ev.slot },
-      { jobId: `la:${ev.mint}` },
+      { jobId: `la-${ev.mint}` },
     ),
     alertsQueue.add('deploy', {
       mint: ev.mint,

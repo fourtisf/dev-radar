@@ -26,6 +26,13 @@ export async function GET(
     return NextResponse.json({ error: 'invalid_wallet' }, { status: 400 });
   }
 
+  const dev = await prisma.dev.findUnique({ where: { wallet } });
+  if (!dev) {
+    await enqueueBackfill(wallet);
+    return NextResponse.json({ status: 'tracing', wallet }, { status: 202 });
+  }
+
+  // Quota burns only when a dossier is actually served (202s are free).
   const user = await getSessionUser();
   const tier = effectiveTier(user);
   if (tier === 'SCOUT') {
@@ -37,12 +44,6 @@ export async function GET(
         { status: 429 },
       );
     }
-  }
-
-  const dev = await prisma.dev.findUnique({ where: { wallet } });
-  if (!dev) {
-    await enqueueBackfill(wallet);
-    return NextResponse.json({ status: 'tracing', wallet }, { status: 202 });
   }
 
   // Known dev whose history has gone stale → opportunistic re-backfill

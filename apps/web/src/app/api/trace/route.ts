@@ -1,10 +1,10 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { prisma } from '@devradar/db';
+import { prisma, type User } from '@devradar/db';
 import { dossierDto } from '@/lib/dossier';
-import { globalIpLimit } from '@/lib/limits';
+import { clientIp, globalIpLimit, scoutDossierQuota } from '@/lib/limits';
 import { enqueueBackfill, enqueueTraceResolve } from '@/lib/queues';
 import { redis } from '@/lib/redis';
-import { getSessionUser } from '@/lib/session';
+import { effectiveTier, getSessionUser } from '@/lib/session';
 import { BASE58_RE } from '@/lib/siws';
 
 export const runtime = 'nodejs';
@@ -51,6 +51,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         await enqueueBackfill(token.devWallet);
         return NextResponse.json({ status: 'tracing', wallet: token.devWallet }, { status: 202 });
       }
+      const quotaHit = await checkQuota(req, user);
+      if (quotaHit) return quotaHit;
       await rememberTrace(user?.id, token.devWallet);
       return NextResponse.json({ kind: 'token', mint: query, dossier });
     }
@@ -63,6 +65,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       await enqueueBackfill(query);
       return NextResponse.json({ status: 'tracing', wallet: query }, { status: 202 });
     }
+    const quotaHit = await checkQuota(req, user);
+    if (quotaHit) return quotaHit;
     await rememberTrace(user?.id, query);
     return NextResponse.json({ kind: 'dev', dossier });
   }
@@ -78,6 +82,17 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   await enqueueBackfill(query); // cheap if it IS a wallet
   await enqueueTraceResolve(query); // resolves deployer if it's a mint
   return NextResponse.json({ status: 'tracing', query }, { status: 202 });
+}
+
+/** Trace resolves to a dossier — SCOUTs burn a dossier credit on 200s. */
+async function checkQuota(req: NextRequest, user: User | null): Promise<NextResponse | null> {
+  if (effectiveTier(user) !== 'SCOUT') return null;
+  const quota = await scoutDossierQuota(user?.wallet ?? clientIp(req));
+  if (quota.ok) return null;
+  return NextResponse.json(
+    { error: 'dossier_quota', used: quota.used, limit: quota.limit, tier: 'SCOUT' },
+    { status: 429 },
+  );
 }
 
 /** Rug-link alerts: remember who traced this dev for 7 days. */

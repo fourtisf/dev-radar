@@ -35,7 +35,7 @@ export async function resolveTrace(job: TraceResolveJob, chain: ChainClient): Pr
       },
       update: {},
     });
-    await backfillQueue.add('backfill', { wallet: found.wallet }, { jobId: `bf:${found.wallet}` });
+    await backfillQueue.add('backfill', { wallet: found.wallet }, { jobId: `bf-${found.wallet}` });
   } catch (err) {
     await redis.set(traceFailedKey(q), '1', 'EX', 120);
     throw err;

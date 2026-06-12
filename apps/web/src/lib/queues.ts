@@ -13,10 +13,14 @@ const globalForQueues = globalThis as unknown as {
 
 function connection(): Redis {
   if (!globalForQueues.bullConnection) {
-    globalForQueues.bullConnection = new Redis(
-      process.env.REDIS_URL ?? 'redis://localhost:6379',
-      { maxRetriesPerRequest: null },
-    );
+    const client = new Redis(process.env.REDIS_URL ?? 'redis://localhost:6379', {
+      maxRetriesPerRequest: null,
+      lazyConnect: true,
+    });
+    client.on('error', (err) => {
+      console.warn('[bullmq redis]', err.message);
+    });
+    globalForQueues.bullConnection = client;
   }
   return globalForQueues.bullConnection;
 }
@@ -41,10 +45,11 @@ export function traceResolveQueue(): Queue {
   return globalForQueues.traceResolveQueue;
 }
 
+// NB: BullMQ custom job ids must not contain ':' — base58 ids are safe with '-'.
 export async function enqueueBackfill(wallet: string): Promise<void> {
-  await backfillQueue().add('backfill', { wallet }, { jobId: `bf:${wallet}` });
+  await backfillQueue().add('backfill', { wallet }, { jobId: `bf-${wallet}` });
 }
 
 export async function enqueueTraceResolve(query: string): Promise<void> {
-  await traceResolveQueue().add('resolve', { query }, { jobId: `tr:${query}` });
+  await traceResolveQueue().add('resolve', { query }, { jobId: `tr-${query}` });
 }

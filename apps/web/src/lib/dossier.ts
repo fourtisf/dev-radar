@@ -15,6 +15,14 @@ export interface TokenDto {
   lifespanS: number;
 }
 
+export interface FundingHopDto {
+  wallet: string;
+  label: string | null;
+  hop: number;
+  sol: number;
+  ts: number;
+}
+
 export interface DevDto {
   wallet: string;
   firstSeenAt: string;
@@ -26,7 +34,7 @@ export interface DevDto {
   bestAthUsd: number;
   medianLifespanS: number;
   fundingType: string;
-  fundingPath: unknown;
+  fundingPath: FundingHopDto[] | null;
   flagged: boolean;
   backfilled: boolean;
   rugRatePct: number | null;
@@ -66,7 +74,10 @@ export function devDto(d: Dev): DevDto {
     bestAthUsd: Number(d.bestAthUsd),
     medianLifespanS: d.medianLifespanS,
     fundingType: d.fundingType,
-    fundingPath: d.fundingPath ?? null,
+    // Persisted by the worker's funding trace as [{wallet,label,hop,sol,ts}]
+    fundingPath: Array.isArray(d.fundingPath)
+      ? (d.fundingPath as unknown as FundingHopDto[])
+      : null,
     flagged: d.flagged,
     backfilled: d.backfilledAt !== null,
     rugRatePct:
