@@ -499,8 +499,10 @@ function Terminal(): JSX.Element {
             <span className="ph-title">
               <span className={`live-dot${paused ? ' paused' : ''}`} /> Live deploys
             </span>
-            {scout ? (
-              <span className="feed-note">Delayed 5 min · Scout</span>
+            {scout && feed.delaySeconds > 0 ? (
+              <span className="feed-note">
+                Delayed {Math.round(feed.delaySeconds / 60)} min · Scout
+              </span>
             ) : (
               <span className="ph-sub">Feed latency 0.4s</span>
             )}

@@ -30,7 +30,11 @@ export async function globalIpLimit(req: NextRequest): Promise<NextResponse | nu
 }
 
 export const SCOUT_DOSSIERS_PER_DAY = 10;
-export const SCOUT_FEED_DELAY_S = 300; // 5 minutes
+// The live feed is the public demo — show it in real time so the site
+// never looks empty. Monetisation stays on dossiers (10/day quota) +
+// Telegram alerts (Operator) + unlimited trace. Set SCOUT_FEED_DELAY_S
+// in the env to re-introduce a paywall delay (e.g. 300 = 5 min).
+export const SCOUT_FEED_DELAY_S = Number(process.env.SCOUT_FEED_DELAY_S ?? 0);
 
 /** SCOUT: 10 dossier requests/day, keyed wallet||ip (Redis counter). */
 export async function scoutDossierQuota(

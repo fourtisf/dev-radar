@@ -701,7 +701,7 @@ export function LandingClient({ profiles }: { profiles: LpProfile[] }): JSX.Elem
                     <b>10 dossiers</b> per day
                   </li>
                   <li>Classification &amp; core history</li>
-                  <li>Live feed · 5-min delay</li>
+                  <li>Live feed · real time</li>
                   <li>Community Telegram channel</li>
                 </ul>
                 <Link href="/app" className="btn btn-line">
