@@ -62,12 +62,34 @@ export class HeliusClient implements ChainClient {
     return out.reverse(); // oldest first
   }
 
-  async getLaunchBuys(_mint: string, _createdSlot: number): Promise<LaunchBuy[]> {
-    // TODO(verify): derive first-2-slot buys from the mint's earliest
-    // enhanced transactions (filter SWAP/BUY in slot..slot+1). Returns
-    // empty until the field mapping is confirmed against sample txs —
-    // bundle % then reports 0 rather than guessing.
-    return [];
+  async getLaunchBuys(mint: string, createdSlot: number): Promise<LaunchBuy[]> {
+    // The mint's earliest enhanced transactions carry the launch buys:
+    // each tokenTransfer that credits a wallet with this mint is a buy.
+    // The create tx is the earliest slot → use it as the anchor when no
+    // slot was captured upstream (PumpPortal omits slot).
+    const txs = await this.request<EnhancedTx[]>(`/addresses/${mint}/transactions?limit=100`);
+    txs.sort((a, b) => Number(a['slot'] ?? 0) - Number(b['slot'] ?? 0));
+    const anchor =
+      createdSlot && createdSlot > 0 ? createdSlot : Number(txs[0]?.['slot'] ?? 0);
+    if (!anchor) return [];
+
+    const buys: LaunchBuy[] = [];
+    for (const tx of txs) {
+      const offset = Number(tx['slot'] ?? 0) - anchor;
+      if (offset < 0 || offset > 2) continue; // first ~2 slots (engine narrows further)
+      const transfers = tx['tokenTransfers'];
+      if (!Array.isArray(transfers)) continue;
+      for (const t of transfers) {
+        if (typeof t !== 'object' || t === null) continue;
+        const r = t as Record<string, unknown>;
+        if (r['mint'] !== mint) continue;
+        const to = r['toUserAccount'];
+        const amount = r['tokenAmount'];
+        if (typeof to !== 'string' || typeof amount !== 'number' || amount <= 0) continue;
+        buys.push({ wallet: to, tokens: amount, slotOffset: offset });
+      }
+    }
+    return buys;
   }
 
   async getTokenSupply(_mint: string): Promise<number> {

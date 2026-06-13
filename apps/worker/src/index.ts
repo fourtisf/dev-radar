@@ -1,10 +1,8 @@
 import { Worker } from 'bullmq';
-import { prisma, type Prisma } from '@devradar/db';
+import { prisma } from '@devradar/db';
 import { env } from './env';
 import { buildIngestServer, handleLaunchEvent } from './ingest/server';
 import { startPumpPortal } from './ingest/pumpportal';
-import { traceFunding } from './engine/funding';
-import { loadKnownSets } from './jobs/launchAnalysis';
 import { createRedis } from './lib/redis';
 import {
   deadLetterQueue,
@@ -45,35 +43,22 @@ async function main(): Promise<void> {
   // ── BullMQ consumers ──────────────────────────────────────────
   const connection = createRedis();
 
-  // In lazy mode the per-launch funding trace is skipped, so fold a
-  // one-time trace into the on-demand backfill (guarded by fundingType
-  // so a dev is only traced once until labelled).
-  const ensureFundingTrace = async (wallet: string): Promise<void> => {
+  // In lazy mode per-launch analysis is skipped, so run bundle + sniper
+  // + funding once for the dev's latest token when its dossier is first
+  // opened. Deduped in Redis (6h) so repeated views cost nothing.
+  const ensureAnalysis = async (wallet: string): Promise<void> => {
     if (env.BACKFILL_MODE !== 'lazy' || !env.HELIUS_API_KEY) return;
-    const dev = await prisma.dev.findUnique({ where: { wallet } });
-    if (!dev || dev.fundingType !== 'UNVERIFIED' || dev.flagged) return;
+    const token = await prisma.token.findFirst({
+      where: { devWallet: wallet },
+      orderBy: { createdAt: 'desc' },
+    });
+    if (!token) return;
+    const dedupeKey = `analyzed:${token.mint}`;
+    if (await connection.set(dedupeKey, '1', 'EX', 21_600, 'NX') !== 'OK') return;
     try {
-      const known = await loadKnownSets();
-      const funding = await traceFunding(
-        wallet,
-        { getIncomingSolTransfers: (w) => chain.getIncomingSolTransfers(w) },
-        known,
-      );
-      if (funding.fundingType !== 'UNVERIFIED') {
-        await prisma.dev.update({
-          where: { wallet },
-          data: {
-            fundingType: funding.fundingType,
-            fundingPath:
-              funding.path.length > 0
-                ? (funding.path as unknown as Prisma.InputJsonValue)
-                : undefined,
-          },
-        });
-        await refreshDev(wallet);
-      }
+      await analyzeLaunch({ mint: token.mint, deployer: wallet, slot: 0 }, chain);
     } catch (err) {
-      log.warn({ err: String(err), wallet }, 'on-demand funding trace failed');
+      log.warn({ err: String(err), wallet }, 'on-demand analysis failed');
     }
   };
 
@@ -88,7 +73,7 @@ async function main(): Promise<void> {
       });
       if (!result.skipped) {
         await refreshDev(job.data.wallet);
-        await ensureFundingTrace(job.data.wallet);
+        await ensureAnalysis(job.data.wallet);
       }
       return result;
     },
