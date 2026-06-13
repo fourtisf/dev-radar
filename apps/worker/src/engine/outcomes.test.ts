@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { decideOutcome, shouldSnapshot } from './outcomes';
+import { ENGINE } from './config';
 
 const H = 3600;
 
@@ -20,13 +21,30 @@ describe('decideOutcome — handoff 7.1', () => {
     expect(decideOutcome({ ...base, devClusterSoldPct24h: 70 })).toBe('LIVE');
   });
 
-  it('≥97% drop from peak within 1h only rugs alongside dev-cluster sells', () => {
+  it('≥97% collapse from a real peak → RUG on price alone (pump.fun heuristic)', () => {
+    // pumped to $50k then craters → rug, no dev-sell signal needed
     expect(
-      decideOutcome({ ...base, dropFromPeakPct1h: 98, devClusterSellsInDropWindow: true }),
+      decideOutcome({ ageS: 2 * H, peakMcapUsd: 50_000, currentMcapUsd: 400, dropFromPeakPct1h: 99 }),
     ).toBe('RUG');
+  });
+
+  it('a microcap that never pumped is not a rug (peak floor) → LIVE', () => {
     expect(
-      decideOutcome({ ...base, dropFromPeakPct1h: 98, devClusterSellsInDropWindow: false }),
+      decideOutcome({ ageS: 2 * H, peakMcapUsd: 3_000, currentMcapUsd: 20, dropFromPeakPct1h: 99 }),
     ).toBe('LIVE');
+  });
+
+  it('dev-sell confirmation can be required by config when available', () => {
+    const strict = { ...ENGINE.outcome, rugRequiresDevSell: true } as unknown as typeof ENGINE.outcome;
+    expect(
+      decideOutcome({ ageS: 2 * H, peakMcapUsd: 50_000, currentMcapUsd: 400, dropFromPeakPct1h: 99 }, strict),
+    ).toBe('LIVE');
+    expect(
+      decideOutcome(
+        { ageS: 2 * H, peakMcapUsd: 50_000, currentMcapUsd: 400, dropFromPeakPct1h: 99, devClusterSellsInDropWindow: true },
+        strict,
+      ),
+    ).toBe('RUG');
   });
 
   it('peak ≥ $100k and age ≥ 72h with no rug trigger → CLEAN', () => {

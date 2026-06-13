@@ -9,8 +9,10 @@ export const ENGINE = {
     rugLpRemovedPct: 80, // dev cluster removes >80% LP → RUG
     rugDevSoldPct: 70, // dev cluster sells >70% supply within 24h → RUG
     rugDevSoldWindowH: 24,
-    rugDropFromPeakPct: 97, // ≥97% drop from peak within 1h + dev-cluster sells → RUG
+    rugDropFromPeakPct: 97, // ≥97% drop from a real peak → RUG (price-collapse)
     rugDropWindowH: 1,
+    rugMinPeakUsd: 15_000, // token must have actually pumped to count as a rug
+    rugRequiresDevSell: false, // price collapse alone is enough (set true once dev-sell signals exist)
     cleanPeakUsd: 100_000, // CLEAN needs peak ≥ $100k …
     resolveAgeH: 72, // … and age ≥ 72h
     deadMcapUsd: 10_000, // DEAD if age ≥ 72h and mcap < $10k

@@ -74,7 +74,20 @@ export async function runOutcomeTick(
     }
 
     const clusterSignals = await signals.getSignals(token.mint, token.devWallet);
-    const outcome = decideOutcome({ ageS, peakMcapUsd, currentMcapUsd, ...clusterSignals });
+    // Derive the price-collapse rug signal from peak vs current (only
+    // when we actually have a current price — a missing price must not
+    // look like a 100% crash).
+    const dropFromPeakPct1h =
+      currentMcapUsd > 0 && peakMcapUsd > 0
+        ? Math.max(0, ((peakMcapUsd - currentMcapUsd) / peakMcapUsd) * 100)
+        : undefined;
+    const outcome = decideOutcome({
+      ageS,
+      peakMcapUsd,
+      currentMcapUsd,
+      ...(dropFromPeakPct1h !== undefined ? { dropFromPeakPct1h } : {}),
+      ...clusterSignals,
+    });
 
     if (outcome !== 'LIVE') {
       await prisma.token.update({

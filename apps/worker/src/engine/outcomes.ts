@@ -29,9 +29,15 @@ const H = 3600;
 export function isRugTriggered(i: OutcomeInput, cfg = ENGINE.outcome): boolean {
   if ((i.devClusterLpRemovedPct ?? 0) > cfg.rugLpRemovedPct) return true;
   if ((i.devClusterSoldPct24h ?? 0) > cfg.rugDevSoldPct) return true;
+  // Price-collapse rug: a token that pumped to a real peak and then
+  // craters ≥97% is a dump/rug. On pump.fun this is reliable on price
+  // alone, so dev-sell confirmation is optional (rugRequiresDevSell).
+  // The peak floor stops dead microcaps (that never pumped) being
+  // mislabelled — those resolve to DEAD by age instead.
   if (
     (i.dropFromPeakPct1h ?? 0) >= cfg.rugDropFromPeakPct &&
-    (i.devClusterSellsInDropWindow ?? false)
+    i.peakMcapUsd >= cfg.rugMinPeakUsd &&
+    (!cfg.rugRequiresDevSell || (i.devClusterSellsInDropWindow ?? false))
   ) {
     return true;
   }
