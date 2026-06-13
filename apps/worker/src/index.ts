@@ -12,7 +12,7 @@ import {
 } from './lib/queues';
 import { HeliusClient } from './chain/helius';
 import { NullChainClient } from './chain/null';
-import { StubPriceProvider } from './chain/price';
+import { LivePriceProvider, StubPriceProvider } from './chain/price';
 import type { ChainClient } from './chain/types';
 import { analyzeLaunch } from './jobs/launchAnalysis';
 import { backfillDev } from './jobs/backfillDev';
@@ -33,7 +33,8 @@ async function main(): Promise<void> {
   if (!env.HELIUS_API_KEY) {
     log.warn('HELIUS_API_KEY not set — running with NullChainClient (replay-only mode)');
   }
-  const price = new StubPriceProvider();
+  const price = env.PRICE_MODE === 'stub' ? new StubPriceProvider() : new LivePriceProvider();
+  log.info({ mode: env.PRICE_MODE }, 'price provider');
   const signals = new StubClusterSignalProvider();
   const bot = createBot();
 

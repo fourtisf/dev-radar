@@ -11,6 +11,8 @@ const schema = z.object({
   APP_URL: z.string().default('http://localhost:3000'),
   WORKER_PORT: z.coerce.number().default(8787),
   NODE_ENV: z.string().default('development'),
+  // 'live' = real pump.fun/DexScreener prices; 'stub' = demo walk for local replay.
+  PRICE_MODE: z.enum(['live', 'stub']).default('live'),
 });
 
 export const env = schema.parse(process.env);
