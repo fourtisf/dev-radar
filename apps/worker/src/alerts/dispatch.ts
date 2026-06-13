@@ -1,13 +1,30 @@
 import { setTimeout as sleep } from 'node:timers/promises';
 import type { Bot } from 'grammy';
 import { prisma } from '@devradar/db';
+import { env } from '../env';
 import { redis } from '../lib/redis';
 import type { AlertJob } from '../lib/queues';
-import { readPrefs } from './bot';
+import { ALERT_CHANNEL_KEY, readPrefs } from './bot';
 import { rugLinkMessage, watchlistDeployMessage, winnerDeployMessage } from './templates';
 
 /** Users who traced a dev recently (set by web /api/trace, TTL 7d). */
 export const tracedDevKey = (wallet: string): string => `traced:dev:${wallet}`;
+
+/** Broadcast channel: explicit env wins, else the auto-captured id. */
+async function alertChannelId(): Promise<string | null> {
+  if (env.ALERT_CHANNEL_ID) return env.ALERT_CHANNEL_ID;
+  return (await redis.get(ALERT_CHANNEL_KEY)) || null;
+}
+
+async function broadcastChannel(bot: Bot, html: string): Promise<void> {
+  const id = await alertChannelId();
+  if (!id) return;
+  try {
+    await sendThrottled(bot, id, html);
+  } catch {
+    /* channel not configured / bot not admin — never fail the job for it */
+  }
+}
 
 function tierActive(tier: string, tierExpires: Date | null): boolean {
   if (tier === 'SCOUT') return false;
@@ -41,6 +58,7 @@ export async function dispatchAlert(job: AlertJob, bot: Bot | null): Promise<voi
   if (!bot) return; // no TELEGRAM_BOT_TOKEN configured
 
   if (job.kind === 'rug-link') {
+    await broadcastChannel(bot, rugLinkMessage(job)); // always mirror to the channel
     const userIds = await redis.smembers(tracedDevKey(job.devWallet));
     if (userIds.length === 0) return;
     const users = await prisma.user.findMany({
@@ -78,4 +96,8 @@ export async function dispatchAlert(job: AlertJob, bot: Bot | null): Promise<voi
     if (prefs.minScore !== undefined && job.drScore < prefs.minScore) continue;
     await sendThrottled(bot, u.tgChatId!, winnerDeployMessage(job));
   }
+
+  // 3) Broadcast channel — proven (winner) deploys only, so the channel
+  //    stays a clean alpha stream rather than every fresh launch.
+  if (job.verdict === 'WINNER') await broadcastChannel(bot, winnerDeployMessage(job));
 }

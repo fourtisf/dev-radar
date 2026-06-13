@@ -6,6 +6,9 @@ const schema = z.object({
   HELIUS_API_KEY: z.string().default(''),
   HELIUS_WEBHOOK_SECRET: z.string().default(''),
   TELEGRAM_BOT_TOKEN: z.string().default(''),
+  // Optional broadcast channel for alerts. Leave blank to auto-capture
+  // (post any message in the channel where the bot is admin).
+  ALERT_CHANNEL_ID: z.string().default(''),
   TREASURY_WALLET: z.string().default(''),
   JWT_SECRET: z.string().default(''),
   APP_URL: z.string().default('http://localhost:3000'),

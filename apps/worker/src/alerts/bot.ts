@@ -1,7 +1,11 @@
 import { Bot, InlineKeyboard, type Context } from 'grammy';
 import { prisma, type Dev, type Token } from '@devradar/db';
 import { env } from '../env';
+import { redis } from '../lib/redis';
 import { fmtUsd, shortAddr, VERDICT_LABEL } from './templates';
+
+/** Redis key where the auto-captured broadcast channel id is stored. */
+export const ALERT_CHANNEL_KEY = 'alert:channel';
 
 /** Reply as HTML with link previews off (matches the alert formatting). */
 function reply(ctx: Context, text: string): Promise<unknown> {
@@ -236,6 +240,23 @@ export function createBot(): Bot | null {
     });
     await ctx.editMessageReplyMarkup({ reply_markup: settingsKeyboard(prefs) });
     await ctx.answerCallbackQuery({ text: 'Saved.' });
+  });
+
+  // ── Auto-capture the broadcast channel ────────────────────────
+  // The bot is added as admin to a channel; the first post there tells
+  // us its numeric id, which alerts then mirror to. (ALERT_CHANNEL_ID
+  // env overrides this.)
+  bot.on('channel_post', async (ctx) => {
+    const id = String(ctx.chat.id);
+    const prev = await redis.get(ALERT_CHANNEL_KEY);
+    await redis.set(ALERT_CHANNEL_KEY, id);
+    if (prev !== id) {
+      try {
+        await ctx.reply('✅ DevRadar alerts connected to this channel.');
+      } catch {
+        /* ignore — bot may lack post permission */
+      }
+    }
   });
 
   // Replace whatever command menu the bot had (e.g. an old project's)

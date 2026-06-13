@@ -7,6 +7,7 @@ const db = vi.hoisted(() => ({
 const redisMock = vi.hoisted(() => ({
   set: vi.fn(async () => 'OK'),
   smembers: vi.fn(async () => [] as string[]),
+  get: vi.fn(async () => null as string | null),
 }));
 
 vi.mock('@devradar/db', () => ({
@@ -17,7 +18,7 @@ vi.mock('@devradar/db', () => ({
 }));
 vi.mock('../lib/redis', () => ({ redis: redisMock }));
 vi.mock('../env', () => ({
-  env: { APP_URL: 'http://localhost:3000', TELEGRAM_BOT_TOKEN: 'test' },
+  env: { APP_URL: 'http://localhost:3000', TELEGRAM_BOT_TOKEN: 'test', ALERT_CHANNEL_ID: '' },
 }));
 
 import { dispatchAlert } from './dispatch';
@@ -69,6 +70,7 @@ describe('dispatchAlert eligibility', () => {
     db.userFindMany.mockReset().mockResolvedValue([]);
     redisMock.set.mockClear();
     redisMock.smembers.mockReset().mockResolvedValue([]);
+    redisMock.get.mockReset().mockResolvedValue(null);
   });
 
   it('winner deploy → Operator (winner-only) gets it; Scout without watch does not', async () => {
@@ -149,5 +151,21 @@ describe('dispatchAlert eligibility', () => {
     expect(sent).toHaveLength(1);
     expect(sent[0]?.chatId).toBe('1001');
     expect(sent[0]?.text).toContain('RUG LINK FLAGGED');
+  });
+
+  it('winner deploy is mirrored to the broadcast channel when set', async () => {
+    const { bot, sent } = fakeBot();
+    redisMock.get.mockResolvedValue('-1001234567890'); // captured channel id
+    await dispatchAlert(winnerDeploy, bot); // no eligible users
+    expect(sent).toHaveLength(1);
+    expect(sent[0]?.chatId).toBe('-1001234567890');
+    expect(sent[0]?.text).toContain('PROVEN DEPLOYER LIVE');
+  });
+
+  it('non-winner deploy is NOT broadcast to the channel', async () => {
+    const { bot, sent } = fakeBot();
+    redisMock.get.mockResolvedValue('-1001234567890');
+    await dispatchAlert({ ...winnerDeploy, verdict: 'FRESH' }, bot);
+    expect(sent).toHaveLength(0);
   });
 });
