@@ -138,7 +138,7 @@ async function main(): Promise<void> {
   const cronTimer = setInterval(tick, ENGINE.snapshots.fastEveryMin * 60_000);
   setTimeout(tick, 15_000);
 
-  // ── Payment watcher: every 20 seconds ─────────────────────────
+  // ── Payment watcher: every 60 seconds ─────────────────────────
   let payTimer: NodeJS.Timeout | null = null;
   if (env.TREASURY_WALLET && chainEnabled) {
     let payRunning = false;
@@ -154,7 +154,7 @@ async function main(): Promise<void> {
       } finally {
         payRunning = false;
       }
-    }, 20_000);
+    }, 60_000);
   } else {
     log.warn('payment watcher disabled (TREASURY_WALLET missing or chain source disabled)');
   }

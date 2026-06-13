@@ -263,10 +263,16 @@ export class PublicRpcChainClient implements ChainClient {
     return { wallet, createdAt: new Date((oldest.blockTime ?? 0) * 1000) };
   }
 
+  private seenTreasury = new Set<string>();
+
   async getTreasuryTransfers(treasury: string): Promise<TreasuryTransfer[]> {
-    const sigs = await this.getSignatures(treasury, 30);
+    // Only fetch full txs for signatures we haven't processed — steady
+    // state costs ~1 RPC call per poll (no new payments → no getTx).
+    const sigs = await this.getSignatures(treasury, 15);
     const out: TreasuryTransfer[] = [];
     for (const s of sigs) {
+      if (this.seenTreasury.has(s.signature)) continue;
+      this.seenTreasury.add(s.signature);
       const tx = await this.getTx(s.signature);
       if (!tx) continue;
       let amountSol = 0;
@@ -288,6 +294,9 @@ export class PublicRpcChainClient implements ChainClient {
       if (amountSol > 0 && fromWallet) {
         out.push({ signature: s.signature, fromWallet, amountSol, memo, ts: (s.blockTime ?? 0) * 1000 });
       }
+    }
+    if (this.seenTreasury.size > 2000) {
+      this.seenTreasury = new Set([...this.seenTreasury].slice(-1000));
     }
     return out;
   }
