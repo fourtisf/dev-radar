@@ -19,6 +19,12 @@ const schema = z.object({
   // 'lazy' (default) = analyse a dev only when its dossier is opened.
   // 'eager' = analyse every launch up front (higher Helius spend).
   BACKFILL_MODE: z.enum(['lazy', 'eager']).default('lazy'),
+  // On-chain data source for the deep lookups (history/funding/bundle):
+  // 'auto' = Helius if HELIUS_API_KEY set, else free public RPC.
+  // 'rpc'  = always free public Solana RPC (no key). 'helius' = force Helius.
+  CHAIN_SOURCE: z.enum(['auto', 'helius', 'rpc']).default('auto'),
+  // Optional comma-separated Solana RPC endpoints (public RPC mode).
+  SOLANA_RPC_URL: z.string().default(''),
 });
 
 export const env = schema.parse(process.env);

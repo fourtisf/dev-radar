@@ -14,8 +14,23 @@ import {
 } from './lib/queues';
 import { HeliusClient } from './chain/helius';
 import { NullChainClient } from './chain/null';
+import { PublicRpcChainClient } from './chain/rpc';
 import { LivePriceProvider, StubPriceProvider } from './chain/price';
 import type { ChainClient } from './chain/types';
+
+/** Pick the on-chain data source (handles CHAIN_SOURCE + key presence). */
+function selectChain(): { chain: ChainClient; enabled: boolean; label: string } {
+  if (env.CHAIN_SOURCE === 'rpc') return { chain: new PublicRpcChainClient(), enabled: true, label: 'public-rpc' };
+  if (env.CHAIN_SOURCE === 'helius') {
+    return env.HELIUS_API_KEY
+      ? { chain: new HeliusClient(), enabled: true, label: 'helius' }
+      : { chain: new NullChainClient(), enabled: false, label: 'null (no helius key)' };
+  }
+  // auto
+  return env.HELIUS_API_KEY
+    ? { chain: new HeliusClient(), enabled: true, label: 'helius' }
+    : { chain: new PublicRpcChainClient(), enabled: true, label: 'public-rpc' };
+}
 import { analyzeLaunch } from './jobs/launchAnalysis';
 import { backfillDev } from './jobs/backfillDev';
 import { prismaBackfillDb } from './jobs/backfillPrisma';
@@ -31,10 +46,8 @@ async function main(): Promise<void> {
   const app = buildIngestServer();
   const log = app.log;
 
-  const chain: ChainClient = env.HELIUS_API_KEY ? new HeliusClient() : new NullChainClient();
-  if (!env.HELIUS_API_KEY) {
-    log.warn('HELIUS_API_KEY not set — running with NullChainClient (replay-only mode)');
-  }
+  const { chain, enabled: chainEnabled, label: chainLabel } = selectChain();
+  log.info({ source: chainLabel, enabled: chainEnabled }, 'chain client');
   const price = env.PRICE_MODE === 'stub' ? new StubPriceProvider() : new LivePriceProvider();
   log.info({ mode: env.PRICE_MODE }, 'price provider');
   const signals = new StubClusterSignalProvider();
@@ -47,7 +60,7 @@ async function main(): Promise<void> {
   // + funding once for the dev's latest token when its dossier is first
   // opened. Deduped in Redis (6h) so repeated views cost nothing.
   const ensureAnalysis = async (wallet: string): Promise<void> => {
-    if (env.BACKFILL_MODE !== 'lazy' || !env.HELIUS_API_KEY) return;
+    if (env.BACKFILL_MODE !== 'lazy' || !chainEnabled) return;
     const token = await prisma.token.findFirst({
       where: { devWallet: wallet },
       orderBy: { createdAt: 'desc' },
@@ -127,7 +140,7 @@ async function main(): Promise<void> {
 
   // ── Payment watcher: every 20 seconds ─────────────────────────
   let payTimer: NodeJS.Timeout | null = null;
-  if (env.TREASURY_WALLET && env.HELIUS_API_KEY) {
+  if (env.TREASURY_WALLET && chainEnabled) {
     let payRunning = false;
     payTimer = setInterval(async () => {
       if (payRunning) return;
@@ -143,7 +156,7 @@ async function main(): Promise<void> {
       }
     }, 20_000);
   } else {
-    log.warn('payment watcher disabled (TREASURY_WALLET or HELIUS_API_KEY missing)');
+    log.warn('payment watcher disabled (TREASURY_WALLET missing or chain source disabled)');
   }
 
   // ── Telegram bot (long polling) ───────────────────────────────
