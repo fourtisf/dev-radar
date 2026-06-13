@@ -250,12 +250,24 @@ export function createBot(): Bot | null {
     const id = String(ctx.chat.id);
     const prev = await redis.get(ALERT_CHANNEL_KEY);
     await redis.set(ALERT_CHANNEL_KEY, id);
+    // stdout → visible in `docker compose logs worker`
+    console.log(`[bot] broadcast channel captured: ${id} (${ctx.chat.title ?? ''})`);
     if (prev !== id) {
       try {
         await ctx.reply('✅ DevRadar alerts connected to this channel.');
       } catch {
         /* ignore — bot may lack post permission */
       }
+    }
+  });
+
+  // Also capture when the bot is (re)added as an admin to a channel.
+  bot.on('my_chat_member', async (ctx) => {
+    const chat = ctx.myChatMember?.chat;
+    const status = ctx.myChatMember?.new_chat_member?.status;
+    if (chat?.type === 'channel' && (status === 'administrator' || status === 'member')) {
+      await redis.set(ALERT_CHANNEL_KEY, String(chat.id));
+      console.log(`[bot] broadcast channel set via admin add: ${chat.id}`);
     }
   });
 

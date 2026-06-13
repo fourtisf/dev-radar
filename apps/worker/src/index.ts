@@ -162,7 +162,12 @@ async function main(): Promise<void> {
   // ── Telegram bot (long polling) ───────────────────────────────
   if (bot) {
     bot.catch((err) => log.error({ err: err.message }, 'telegram bot error'));
-    void bot.start({ onStart: (me) => log.info({ username: me.username }, 'telegram bot up') });
+    // Explicitly subscribe to channel_post so the broadcast-channel
+    // auto-capture works (it's not always in the polling default).
+    void bot.start({
+      allowed_updates: ['message', 'callback_query', 'channel_post', 'my_chat_member'],
+      onStart: (me) => log.info({ username: me.username }, 'telegram bot up'),
+    });
   } else {
     log.warn('telegram bot disabled (TELEGRAM_BOT_TOKEN missing)');
   }
