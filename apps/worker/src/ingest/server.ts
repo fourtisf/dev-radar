@@ -42,14 +42,27 @@ export async function handleLaunchEvent(ev: LaunchEvent): Promise<void> {
     update: {}, // replays / duplicate deliveries are no-ops
   });
 
+  // ── Helius-cost control ───────────────────────────────────────
+  // 'eager' analyses every launch up front (richest feed, highest API
+  // spend). 'lazy' (default) defers backfill + funding/bundle until a
+  // dossier is actually opened (/api/dev), so Helius is only hit for
+  // wallets someone looks at — typically a tiny fraction of launches.
+  const heavy: Promise<unknown>[] = [];
+  if (env.BACKFILL_MODE === 'eager') {
+    heavy.push(
+      // NB: BullMQ custom job ids must not contain ':' — base58 ids are safe with '-'.
+      backfillQueue.add('backfill', { wallet: ev.deployer }, { jobId: `bf-${ev.deployer}` }),
+      launchAnalysisQueue.add(
+        'analyze',
+        { mint: ev.mint, deployer: ev.deployer, slot: ev.slot },
+        { jobId: `la-${ev.mint}` },
+      ),
+    );
+  }
+
   await Promise.all([
-    // NB: BullMQ custom job ids must not contain ':' — base58 ids are safe with '-'.
-    backfillQueue.add('backfill', { wallet: ev.deployer }, { jobId: `bf-${ev.deployer}` }),
-    launchAnalysisQueue.add(
-      'analyze',
-      { mint: ev.mint, deployer: ev.deployer, slot: ev.slot },
-      { jobId: `la-${ev.mint}` },
-    ),
+    ...heavy,
+    // Alerts read the DB only (no chain calls) — always cheap to fan out.
     alertsQueue.add('deploy', {
       mint: ev.mint,
       symbol: ev.symbol,

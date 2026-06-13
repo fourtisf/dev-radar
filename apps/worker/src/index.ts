@@ -1,6 +1,10 @@
 import { Worker } from 'bullmq';
+import { prisma, type Prisma } from '@devradar/db';
 import { env } from './env';
-import { buildIngestServer } from './ingest/server';
+import { buildIngestServer, handleLaunchEvent } from './ingest/server';
+import { startPumpPortal } from './ingest/pumpportal';
+import { traceFunding } from './engine/funding';
+import { loadKnownSets } from './jobs/launchAnalysis';
 import { createRedis } from './lib/redis';
 import {
   deadLetterQueue,
@@ -41,6 +45,38 @@ async function main(): Promise<void> {
   // ── BullMQ consumers ──────────────────────────────────────────
   const connection = createRedis();
 
+  // In lazy mode the per-launch funding trace is skipped, so fold a
+  // one-time trace into the on-demand backfill (guarded by fundingType
+  // so a dev is only traced once until labelled).
+  const ensureFundingTrace = async (wallet: string): Promise<void> => {
+    if (env.BACKFILL_MODE !== 'lazy' || !env.HELIUS_API_KEY) return;
+    const dev = await prisma.dev.findUnique({ where: { wallet } });
+    if (!dev || dev.fundingType !== 'UNVERIFIED' || dev.flagged) return;
+    try {
+      const known = await loadKnownSets();
+      const funding = await traceFunding(
+        wallet,
+        { getIncomingSolTransfers: (w) => chain.getIncomingSolTransfers(w) },
+        known,
+      );
+      if (funding.fundingType !== 'UNVERIFIED') {
+        await prisma.dev.update({
+          where: { wallet },
+          data: {
+            fundingType: funding.fundingType,
+            fundingPath:
+              funding.path.length > 0
+                ? (funding.path as unknown as Prisma.InputJsonValue)
+                : undefined,
+          },
+        });
+        await refreshDev(wallet);
+      }
+    } catch (err) {
+      log.warn({ err: String(err), wallet }, 'on-demand funding trace failed');
+    }
+  };
+
   const backfillWorker = new Worker<BackfillDevJob>(
     QUEUE.backfillDev,
     async (job) => {
@@ -50,7 +86,10 @@ async function main(): Promise<void> {
         db: prismaBackfillDb,
         log: (msg, fields) => log.info(fields ?? {}, msg),
       });
-      if (!result.skipped) await refreshDev(job.data.wallet);
+      if (!result.skipped) {
+        await refreshDev(job.data.wallet);
+        await ensureFundingTrace(job.data.wallet);
+      }
       return result;
     },
     { connection, concurrency: ENGINE.backfill.concurrency },
@@ -130,6 +169,23 @@ async function main(): Promise<void> {
     log.warn('telegram bot disabled (TELEGRAM_BOT_TOKEN missing)');
   }
 
+  // ── Launch ingestion: PumpPortal WS (free) and/or Helius webhook ─
+  let stopPumpPortal: (() => void) | null = null;
+  if (env.INGEST_SOURCE === 'pumpportal' || env.INGEST_SOURCE === 'both') {
+    stopPumpPortal = startPumpPortal({
+      onLaunch: handleLaunchEvent,
+      log: {
+        info: (o, m) => log.info(o, m),
+        warn: (o, m) => log.warn(o, m),
+        error: (o, m) => log.error(o, m),
+      },
+    });
+  }
+  log.info(
+    { source: env.INGEST_SOURCE, backfill: env.BACKFILL_MODE },
+    'ingestion configured',
+  );
+
   await app.listen({ port: env.WORKER_PORT, host: '0.0.0.0' });
   log.info({ port: env.WORKER_PORT }, 'devradar worker up');
 
@@ -138,6 +194,7 @@ async function main(): Promise<void> {
     log.info({ signal }, 'shutting down');
     clearInterval(cronTimer);
     if (payTimer) clearInterval(payTimer);
+    if (stopPumpPortal) stopPumpPortal();
     if (bot) await bot.stop();
     await Promise.allSettled([
       backfillWorker.close(),

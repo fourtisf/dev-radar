@@ -13,6 +13,12 @@ const schema = z.object({
   NODE_ENV: z.string().default('development'),
   // 'live' = real pump.fun/DexScreener prices; 'stub' = demo walk for local replay.
   PRICE_MODE: z.enum(['live', 'stub']).default('live'),
+  // Launch source: 'pumpportal' (free WebSocket, no Helius credits),
+  // 'helius' (enhanced webhook), or 'both'.
+  INGEST_SOURCE: z.enum(['pumpportal', 'helius', 'both']).default('pumpportal'),
+  // 'lazy' (default) = analyse a dev only when its dossier is opened.
+  // 'eager' = analyse every launch up front (higher Helius spend).
+  BACKFILL_MODE: z.enum(['lazy', 'eager']).default('lazy'),
 });
 
 export const env = schema.parse(process.env);
