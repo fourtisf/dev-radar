@@ -157,7 +157,10 @@ function Terminal(): JSX.Element {
   }, []);
 
   const fetchDossier = useCallback(
-    async (wallet: string, token: TokenDto | null): Promise<void> => {
+    // `fallback` is an optimistic dossier built from data we already
+    // hold (a clicked feed row). When present, the panel always shows
+    // something real and never dead-ends — the fetch only enriches it.
+    async (wallet: string, token: TokenDto | null, fallback?: DossierDto): Promise<void> => {
       const myPoll = ++pollAbort.current;
       setTab('dossier');
 
@@ -167,7 +170,11 @@ function Terminal(): JSX.Element {
         return;
       }
 
-      setDossier({ status: 'loading' });
+      if (fallback) {
+        setDossier({ status: 'ready', dossier: fallback, token, traceMs: 0 });
+      } else {
+        setDossier({ status: 'loading' });
+      }
       const started = performance.now();
 
       for (let attempt = 0; attempt < 14; attempt++) {
@@ -176,22 +183,22 @@ function Terminal(): JSX.Element {
         try {
           res = await fetch(`/api/dev/${wallet}`);
         } catch {
-          setDossier({ status: 'notfound', query: wallet });
+          if (!fallback) setDossier({ status: 'notfound', query: wallet });
           return;
         }
 
         if (res.status === 202) {
-          setDossier({ status: 'tracing', query: wallet });
+          if (!fallback) setDossier({ status: 'tracing', query: wallet });
           await new Promise((r) => setTimeout(r, 2500));
           continue;
         }
         if (res.status === 429) {
           const body = (await res.json()) as { used?: number; limit?: number };
-          setDossier({ status: 'quota', used: body.used ?? 10, limit: body.limit ?? 10 });
+          if (!fallback) setDossier({ status: 'quota', used: body.used ?? 10, limit: body.limit ?? 10 });
           return;
         }
         if (!res.ok) {
-          setDossier({ status: 'notfound', query: wallet });
+          if (!fallback) setDossier({ status: 'notfound', query: wallet });
           return;
         }
         const data = (await res.json()) as DossierDto;
@@ -200,7 +207,7 @@ function Terminal(): JSX.Element {
         sweepThen(() => setDossier({ status: 'ready', dossier: data, token, traceMs }));
         return;
       }
-      setDossier({ status: 'notfound', query: wallet });
+      if (!fallback) setDossier({ status: 'notfound', query: wallet });
     },
     [sweepThen],
   );
@@ -208,7 +215,9 @@ function Terminal(): JSX.Element {
   const selectRow = useCallback(
     (row: FeedRow): void => {
       setActiveMint(row.token.mint);
-      void fetchDossier(row.dev.wallet, row.token);
+      // Instant dossier from the row we already have, then enrich.
+      const optimistic: DossierDto = { dev: row.dev, drScore: row.token.drScore, tokens: [row.token] };
+      void fetchDossier(row.dev.wallet, row.token, optimistic);
     },
     [fetchDossier],
   );

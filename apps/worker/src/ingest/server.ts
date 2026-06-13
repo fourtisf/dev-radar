@@ -4,6 +4,7 @@ import { prisma } from '@devradar/db';
 import { env } from '../env';
 import { alertsQueue, backfillQueue, launchAnalysisQueue } from '../lib/queues';
 import { CHANNEL, pgNotify, type DeployNotification } from '../lib/notify';
+import { refreshDev } from '../jobs/refreshDev';
 import { parseWebhookPayload, type LaunchEvent } from './parse';
 
 function authOk(header: string | undefined): boolean {
@@ -21,7 +22,7 @@ function authOk(header: string | undefined): boolean {
  * work goes through BullMQ. Target <50ms excluding IO waits.
  */
 export async function handleLaunchEvent(ev: LaunchEvent): Promise<void> {
-  const dev = await prisma.dev.upsert({
+  await prisma.dev.upsert({
     where: { wallet: ev.deployer },
     create: { wallet: ev.deployer, firstSeenAt: ev.timestamp },
     update: {}, // firstSeenAt only set on first sight
@@ -41,6 +42,20 @@ export async function handleLaunchEvent(ev: LaunchEvent): Promise<void> {
     },
     update: {}, // replays / duplicate deliveries are no-ops
   });
+
+  // ── Own-data intelligence (no chain calls) ────────────────────
+  // Recompute the dev's verdict/score from everything DevRadar has
+  // observed. A repeat deployer's accumulating record (and outcomes
+  // resolved by the price cron over time) surfaces on the feed
+  // immediately — RUGGER/WINNER emerge without Helius.
+  const dev =
+    (await refreshDev(ev.deployer).catch(() => null)) ??
+    (await prisma.dev.findUnique({ where: { wallet: ev.deployer } }));
+  const token = await prisma.token.findUnique({ where: { mint: ev.mint } });
+  const drScore = token?.drScore ?? 50;
+  const bundlePct = token ? Number(token.bundlePct) : 0;
+  const sniperLvl = token?.sniperLvl ?? 'LOW';
+  if (!dev) return; // should never happen — just upserted
 
   // ── Helius-cost control ───────────────────────────────────────
   // 'eager' analyses every launch up front (richest feed, highest API
@@ -73,9 +88,9 @@ export async function handleLaunchEvent(ev: LaunchEvent): Promise<void> {
       launchCount: dev.launchCount,
       rugCount: dev.rugCount,
       bestAthUsd: Number(dev.bestAthUsd),
-      bundlePct: 0,
-      sniperLvl: 'LOW',
-      drScore: 50,
+      bundlePct,
+      sniperLvl,
+      drScore,
     }),
   ]);
 
@@ -87,9 +102,9 @@ export async function handleLaunchEvent(ev: LaunchEvent): Promise<void> {
       name: ev.name,
       venue: ev.venue,
       createdAt: ev.timestamp.toISOString(),
-      bundlePct: 0,
-      sniperLvl: 'LOW',
-      drScore: 50,
+      bundlePct,
+      sniperLvl,
+      drScore,
     },
     dev: {
       wallet: dev.wallet,
