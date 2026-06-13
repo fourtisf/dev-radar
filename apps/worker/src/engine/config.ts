@@ -26,12 +26,14 @@ export const ENGINE = {
     stopAfterH: 72,
   },
 
-  /** 7.2 classification */
+  /** 7.2 classification — tuned for free-data reality (faster verdicts).
+   *  Original "proven" bars: winner 5 launches / $250k ATH, rugger 5
+   *  launches. Raise these back once historical depth accumulates. */
   classify: {
-    winnerMinLaunches: 5,
+    winnerMinLaunches: 3,
     winnerMaxRugRate: 0.1,
-    winnerMinBestAthUsd: 250_000,
-    ruggerMinLaunches: 5,
+    winnerMinBestAthUsd: 30_000,
+    ruggerMinLaunches: 3,
     ruggerMinRugRate: 0.6,
     ruggerFlaggedMinLaunches: 2,
     freshMaxLaunches: 2,

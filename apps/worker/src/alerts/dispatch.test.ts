@@ -162,10 +162,19 @@ describe('dispatchAlert eligibility', () => {
     expect(sent[0]?.text).toContain('PROVEN DEPLOYER LIVE');
   });
 
-  it('non-winner deploy is NOT broadcast to the channel', async () => {
+  it('fresh/neutral deploy is NOT broadcast to the channel', async () => {
     const { bot, sent } = fakeBot();
     redisMock.get.mockResolvedValue('-1001234567890');
     await dispatchAlert({ ...winnerDeploy, verdict: 'FRESH' }, bot);
     expect(sent).toHaveLength(0);
+  });
+
+  it('rugger deploy is broadcast to the channel as a warning', async () => {
+    const { bot, sent } = fakeBot();
+    redisMock.get.mockResolvedValue('-1001234567890');
+    await dispatchAlert({ ...winnerDeploy, verdict: 'RUGGER' }, bot);
+    expect(sent).toHaveLength(1);
+    expect(sent[0]?.chatId).toBe('-1001234567890');
+    expect(sent[0]?.text).toContain('SERIAL RUGGER LIVE');
   });
 });

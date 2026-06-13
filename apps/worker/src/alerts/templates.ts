@@ -59,6 +59,18 @@ export function winnerDeployMessage(job: AlertJob): string {
   ].join('\n');
 }
 
+/** Rugger deploy (channel broadcast): warn that a serial rugger is live. */
+export function ruggerDeployMessage(job: AlertJob): string {
+  return [
+    '<b>⚠️ SERIAL RUGGER LIVE</b>',
+    `<b>$${esc(job.symbol)}</b> — ${esc(job.name)}`,
+    LINE,
+    recordBlock(job),
+    LINE,
+    '<b>Avoid.</b> ' + links(job),
+  ].join('\n');
+}
+
 /** Watchlist deploy: any tier with that dev followed. */
 export function watchlistDeployMessage(job: AlertJob): string {
   return [

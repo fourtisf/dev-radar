@@ -5,7 +5,12 @@ import { env } from '../env';
 import { redis } from '../lib/redis';
 import type { AlertJob } from '../lib/queues';
 import { ALERT_CHANNEL_KEY, readPrefs } from './bot';
-import { rugLinkMessage, watchlistDeployMessage, winnerDeployMessage } from './templates';
+import {
+  rugLinkMessage,
+  ruggerDeployMessage,
+  watchlistDeployMessage,
+  winnerDeployMessage,
+} from './templates';
 
 /** Users who traced a dev recently (set by web /api/trace, TTL 7d). */
 export const tracedDevKey = (wallet: string): string => `traced:dev:${wallet}`;
@@ -97,7 +102,8 @@ export async function dispatchAlert(job: AlertJob, bot: Bot | null): Promise<voi
     await sendThrottled(bot, u.tgChatId!, winnerDeployMessage(job));
   }
 
-  // 3) Broadcast channel — proven (winner) deploys only, so the channel
-  //    stays a clean alpha stream rather than every fresh launch.
+  // 3) Broadcast channel — proven verdicts only (winners to ape,
+  //    ruggers to avoid), so the channel stays a clean alpha stream.
   if (job.verdict === 'WINNER') await broadcastChannel(bot, winnerDeployMessage(job));
+  else if (job.verdict === 'RUGGER') await broadcastChannel(bot, ruggerDeployMessage(job));
 }
