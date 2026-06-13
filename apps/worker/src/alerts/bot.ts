@@ -2,7 +2,11 @@ import { Bot, InlineKeyboard, type Context } from 'grammy';
 import { prisma, type Dev, type Token } from '@devradar/db';
 import { env } from '../env';
 import { redis } from '../lib/redis';
-import { fmtUsd, shortAddr, VERDICT_LABEL } from './templates';
+import { fmtUsd, shortAddr, solscanAccount, VERDICT_LABEL } from './templates';
+
+/** Dev wallet rendered as a clickable Solscan link. */
+const walletLink = (wallet: string): string =>
+  `<a href="${solscanAccount(wallet)}">${shortAddr(wallet)}</a>`;
 
 /** Redis key where the auto-captured broadcast channel id is stored. */
 export const ALERT_CHANNEL_KEY = 'alert:channel';
@@ -66,7 +70,7 @@ function devSummary(dev: Dev, token?: Token | null): string {
   const score = token ? token.drScore : 50;
   const bundle = token ? Number(token.bundlePct) : 0;
   return (
-    `${head}Dev <code>${shortAddr(dev.wallet)}</code> · ${verdict}\n` +
+    `${head}Dev ${walletLink(dev.wallet)} · ${verdict}\n` +
     `${dev.launchCount} launches · ${rugRatePct(dev)} rug · best ATH ${fmtUsd(Number(dev.bestAthUsd))}\n` +
     `Bundle ${bundle}% · DR Score ${score} · funding ${dev.fundingType.toLowerCase()}`
   );
@@ -139,7 +143,7 @@ export function createBot(): Bot | null {
     }
     const lines = tokens.map(
       (t) =>
-        `<b>$${t.symbol}</b> · ${VERDICT_LABEL[t.dev.verdict] ?? t.dev.verdict} · DR ${t.drScore} · ${shortAddr(t.devWallet)}`,
+        `<b>$${t.symbol}</b> · ${VERDICT_LABEL[t.dev.verdict] ?? t.dev.verdict} · DR ${t.drScore} · ${walletLink(t.devWallet)}`,
     );
     await reply(ctx, `<b>Latest launches</b>\n${lines.join('\n')}`);
   });
@@ -156,7 +160,7 @@ export function createBot(): Bot | null {
       return;
     }
     const lines = devs.map(
-      (d) => `<code>${shortAddr(d.wallet)}</code> · ${d.launchCount} launches · best ATH ${fmtUsd(Number(d.bestAthUsd))}`,
+      (d) => `${walletLink(d.wallet)} · ${d.launchCount} launches · best ATH ${fmtUsd(Number(d.bestAthUsd))}`,
     );
     await reply(ctx, `<b>Top proven deployers</b>\n${lines.join('\n')}`);
   });
@@ -172,7 +176,7 @@ export function createBot(): Bot | null {
       return;
     }
     const lines = devs.map(
-      (d) => `<code>${shortAddr(d.wallet)}</code> · ${d.launchCount} launches · ${rugRatePct(d)} rug`,
+      (d) => `${walletLink(d.wallet)} · ${d.launchCount} launches · ${rugRatePct(d)} rug`,
     );
     await reply(ctx, `<b>Flagged ruggers</b>\n${lines.join('\n')}`);
   });

@@ -37,11 +37,14 @@ function links(job: AlertJob): string {
   return `<a href="${dossier}">dossier</a> · <a href="${chart}">chart</a> · <a href="${dossier}">dev history</a>`;
 }
 
+/** Solscan account page for a wallet (clickable in alerts). */
+export const solscanAccount = (wallet: string): string => `https://solscan.io/account/${wallet}`;
+
 function recordBlock(job: AlertJob): string {
   const verdict = VERDICT_LABEL[job.verdict] ?? job.verdict;
   const snipers = job.sniperLvl.toLowerCase();
   return [
-    `Dev <code>${shortAddr(job.devWallet)}</code> · ${verdict}`,
+    `Dev <a href="${solscanAccount(job.devWallet)}">${shortAddr(job.devWallet)}</a> · ${verdict}`,
     `${job.launchCount} launches · ${job.rugCount} rugs · best ATH ${fmtUsd(job.bestAthUsd)}`,
     `Bundle ${job.bundlePct}% · Snipers ${snipers} · DR Score ${job.drScore}`,
   ].join('\n');
@@ -89,7 +92,7 @@ export function rugLinkMessage(job: AlertJob): string {
     '<b>● RUG LINK FLAGGED</b>',
     `<b>$${esc(job.symbol)}</b> — ${esc(job.name)}`,
     LINE,
-    `Dev <code>${shortAddr(job.devWallet)}</code> funding traced to a flagged rugger cluster.`,
+    `Dev <a href="${solscanAccount(job.devWallet)}">${shortAddr(job.devWallet)}</a> funding traced to a flagged rugger cluster.`,
     `You traced this deployer in the last 7 days.`,
     LINE,
     links(job),

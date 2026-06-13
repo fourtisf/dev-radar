@@ -25,7 +25,9 @@ describe('telegram templates — prototype TG mockup', () => {
     const msg = winnerDeployMessage(job);
     expect(msg).toContain('● PROVEN DEPLOYER LIVE');
     expect(msg).toContain('<b>$NORTH</b> — North Road Dog');
-    expect(msg).toContain('Dev <code>7xKp····9fQm</code> · Serial Winner');
+    expect(msg).toContain(
+      'Dev <a href="https://solscan.io/account/7xKpW9fQmDEVWALLETxxxxxxxxxxxxxxxxxxxxx9fQm">7xKp····9fQm</a> · Serial Winner',
+    );
     expect(msg).toContain('14 launches · 0 rugs · best ATH $4.2M');
     expect(msg).toContain('Bundle 4.1% · Snipers low · DR Score 92');
     expect(msg).toContain('dossier');
