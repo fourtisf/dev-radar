@@ -237,6 +237,50 @@ export function LandingClient({ profiles }: { profiles: LpProfile[] }): JSX.Elem
   return (
     <ToastProvider>
       <div id="view-landing" ref={rootRef}>
+        <div
+          className="ca-bar"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 12,
+            flexWrap: 'wrap',
+            padding: '10px 16px',
+            background: 'rgba(226,182,91,0.06)',
+            borderBottom: '1px solid rgba(226,182,91,0.18)',
+            fontFamily: 'var(--mono)',
+            fontSize: 13.5,
+          }}
+        >
+          <span style={{ color: 'var(--gold)', letterSpacing: '2px', fontWeight: 600 }}>$RADAR CA</span>
+          <code style={{ color: 'var(--white)', wordBreak: 'break-all' }}>
+            CcKvbU1Xg9BCpC5ukvCGFeGnw43Hk45reFJZxQpxpump
+          </code>
+          <button
+            type="button"
+            onClick={(e) => {
+              navigator.clipboard?.writeText('CcKvbU1Xg9BCpC5ukvCGFeGnw43Hk45reFJZxQpxpump');
+              const el = e.currentTarget;
+              const prev = el.textContent;
+              el.textContent = 'Copied ✓';
+              setTimeout(() => {
+                el.textContent = prev;
+              }, 1500);
+            }}
+            style={{
+              border: '1px solid rgba(226,182,91,0.4)',
+              color: 'var(--gold)',
+              borderRadius: 100,
+              padding: '4px 14px',
+              fontFamily: 'inherit',
+              fontSize: 12,
+              letterSpacing: '1px',
+              cursor: 'pointer',
+            }}
+          >
+            Copy
+          </button>
+        </div>
         <nav ref={navRef}>
           <div className="nav-in">
             <Link className="logo" href="/" aria-label="DevRadar home">
