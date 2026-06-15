@@ -812,8 +812,12 @@ export function LandingClient({ profiles }: { profiles: LpProfile[] }): JSX.Elem
                 </div>
                 <div className="fcol">
                   <div className="fh">Channels</div>
-                  <a href="#">Telegram</a>
-                  <a href="#">X / Twitter</a>
+                  <a href="https://t.me/devradars" target="_blank" rel="noopener noreferrer">
+                    Telegram
+                  </a>
+                  <a href="https://x.com/DevRadarS" target="_blank" rel="noopener noreferrer">
+                    X / Twitter
+                  </a>
                   <a href="#">Status</a>
                 </div>
               </div>
