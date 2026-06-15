@@ -240,16 +240,24 @@ export function LandingClient({ profiles }: { profiles: LpProfile[] }): JSX.Elem
         <div
           className="ca-bar"
           style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            zIndex: 80,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             gap: 12,
-            flexWrap: 'wrap',
-            padding: '10px 16px',
-            background: 'rgba(226,182,91,0.06)',
-            borderBottom: '1px solid rgba(226,182,91,0.18)',
+            flexWrap: 'nowrap',
+            whiteSpace: 'nowrap',
+            overflowX: 'auto',
+            height: 42,
+            padding: '0 16px',
+            background: '#0a0906',
+            borderBottom: '1px solid rgba(226,182,91,0.22)',
             fontFamily: 'var(--mono)',
-            fontSize: 13.5,
+            fontSize: 13,
           }}
         >
           <span style={{ color: 'var(--gold)', letterSpacing: '2px', fontWeight: 600 }}>$RADAR CA</span>
@@ -281,7 +289,7 @@ export function LandingClient({ profiles }: { profiles: LpProfile[] }): JSX.Elem
             Copy
           </button>
         </div>
-        <nav ref={navRef}>
+        <nav ref={navRef} style={{ top: 42 }}>
           <div className="nav-in">
             <Link className="logo" href="/" aria-label="DevRadar home">
               <BrandGlyph />
