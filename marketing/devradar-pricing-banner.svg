@@ -1,0 +1,90 @@
+<svg width="1600" height="900" viewBox="0 0 1600 900" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="goldtx" x1="0" y1="0" x2="1" y2="0.35">
+      <stop offset="0" stop-color="#F4D789"/><stop offset="0.5" stop-color="#E2B65B"/><stop offset="1" stop-color="#B9893A"/>
+    </linearGradient>
+    <linearGradient id="goldbtn" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#F4D789"/><stop offset="0.55" stop-color="#E2B65B"/><stop offset="1" stop-color="#B9893A"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#E2B65B" stop-opacity="0.16"/><stop offset="1" stop-color="#E2B65B" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="cardbg" x1="0" y1="0" x2="0.4" y2="1">
+      <stop offset="0" stop-color="#121216"/><stop offset="1" stop-color="#0B0B0E"/>
+    </linearGradient>
+    <filter id="soft" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="6"/></filter>
+    <filter id="grain"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/></filter>
+  </defs>
+
+  <rect width="1600" height="900" fill="#060607"/>
+  <rect x="400" y="-360" width="800" height="800" fill="url(#glow)"/>
+  <rect width="1600" height="900" filter="url(#grain)" opacity="0.05"/>
+
+  <!-- top bar -->
+  <g transform="translate(122,84) scale(0.30)">
+    <path d="M -100 0 C -55 -42 55 -42 100 0 C 55 42 -55 42 -100 0 Z" fill="none" stroke="url(#goldbtn)" stroke-width="11" stroke-linejoin="round"/>
+    <circle r="40" fill="#E2B65B" fill-opacity="0.06" stroke="url(#goldbtn)" stroke-width="6" stroke-opacity="0.7"/>
+    <circle r="27" fill="url(#goldbtn)"/>
+    <circle cx="11" cy="-11" r="7" fill="#060607"/>
+  </g>
+  <text x="164" y="93" font-family="Geist" font-weight="600" font-size="27" letter-spacing="3" fill="#F4F2EC">DEV<tspan fill="#E2B65B">RADAR</tspan></text>
+  <text x="1504" y="91" text-anchor="end" font-family="Geist Mono" font-weight="500" font-size="15" letter-spacing="2" fill="#9C9A93">@DevRadarS <tspan fill="#E2B65B">·</tspan> t.me/devradars</text>
+  <line x1="96" y1="132" x2="1504" y2="132" stroke="#F4F2EC" stroke-opacity="0.08"/>
+
+  <!-- headline -->
+  <text x="800" y="196" text-anchor="middle" font-family="Geist Mono" font-weight="500" font-size="15" letter-spacing="4" fill="#E2B65B">ACCESS</text>
+  <text x="800" y="244" text-anchor="middle" font-family="Geist" font-weight="700" font-size="38" letter-spacing="-1" fill="#F4F2EC">Priced in SOL. Paid for by <tspan fill="url(#goldtx)">one avoided rug.</tspan></text>
+
+  <rect x="80" y="274" width="460" height="566" rx="22" fill="url(#cardbg)" stroke="rgba(255,255,255,0.16)"/>
+<text x="114" y="330" font-family="Geist Mono" font-weight="600" font-size="15" letter-spacing="3.5" fill="#9C9A93">SCOUT</text>
+<text x="114" y="390" font-family="Geist" font-weight="700" font-size="52" letter-spacing="-1.5" fill="#F4F2EC">Free</text>
+<text x="114" y="424" font-family="Geist" font-weight="400" font-size="16" fill="#9C9A93">For checking before you ape.</text>
+<line x1="114" y1="450" x2="506" y2="450" stroke="#F4F2EC" stroke-opacity="0.08"/>
+<g transform="translate(114,477)" fill="none" stroke="#E2B65B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M0 5 L4 9 L11 0"/></g>
+<text x="138" y="488" font-family="Geist" font-size="18" fill="#9C9A93"><tspan font-weight="600" fill="#F4F2EC">10 dossiers</tspan> per day</text>
+<g transform="translate(114,517)" fill="none" stroke="#E2B65B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M0 5 L4 9 L11 0"/></g>
+<text x="138" y="528" font-family="Geist" font-size="18" fill="#9C9A93"><tspan font-weight="600" fill="#F4F2EC">Classification</tspan> &amp; core history</text>
+<g transform="translate(114,557)" fill="none" stroke="#E2B65B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M0 5 L4 9 L11 0"/></g>
+<text x="138" y="568" font-family="Geist" font-size="18" fill="#9C9A93"><tspan font-weight="600" fill="#F4F2EC">Live feed</tspan> · real time</text>
+<g transform="translate(114,597)" fill="none" stroke="#E2B65B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M0 5 L4 9 L11 0"/></g>
+<text x="138" y="608" font-family="Geist" font-size="18" fill="#9C9A93"><tspan font-weight="600" fill="#F4F2EC">Community</tspan> Telegram channel</text>
+<rect x="114" y="766" width="392" height="54" rx="27" fill="none" stroke="rgba(255,255,255,0.16)"/>
+<text x="310" y="800" text-anchor="middle" font-family="Geist Mono" font-weight="500" font-size="14" letter-spacing="2" fill="#F4F2EC">START SCANNING</text>
+  <rect x="570" y="274" width="460" height="566" rx="22" fill="#15130E" stroke="#E2B65B" stroke-opacity="0.55"/>
+<rect x="570" y="274" width="460" height="566" rx="22" fill="none" stroke="#E2B65B" stroke-opacity="0.14"/>
+<rect x="716" y="256" width="168" height="34" rx="17" fill="url(#goldbtn)"/>
+<text x="800" y="278" text-anchor="middle" font-family="Geist Mono" font-weight="600" font-size="12" letter-spacing="2" fill="#1A1305">MOST DEPLOYED</text>
+<text x="604" y="330" font-family="Geist Mono" font-weight="600" font-size="15" letter-spacing="3.5" fill="#E2B65B">OPERATOR</text>
+<text x="604" y="390" font-family="Geist" font-weight="700" font-size="52" letter-spacing="-1.5" fill="#F4F2EC">2 SOL<tspan font-family="Geist Mono" font-weight="500" font-size="15" letter-spacing="1" fill="#5F5D58">  / MONTH</tspan></text>
+<text x="604" y="424" font-family="Geist" font-weight="400" font-size="16" fill="#9C9A93">For the trenches, at full speed.</text>
+<line x1="604" y1="450" x2="996" y2="450" stroke="#F4F2EC" stroke-opacity="0.08"/>
+<g transform="translate(604,477)" fill="none" stroke="#5CDD94" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M0 5 L4 9 L11 0"/></g>
+<text x="628" y="488" font-family="Geist" font-size="18" fill="#9C9A93"><tspan font-weight="600" fill="#F4F2EC">Unlimited</tspan> dossiers &amp; DR Scores</text>
+<g transform="translate(604,517)" fill="none" stroke="#5CDD94" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M0 5 L4 9 L11 0"/></g>
+<text x="628" y="528" font-family="Geist" font-size="18" fill="#9C9A93"><tspan font-weight="600" fill="#F4F2EC">Real-time</tspan> Telegram alerts</text>
+<g transform="translate(604,557)" fill="none" stroke="#5CDD94" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M0 5 L4 9 L11 0"/></g>
+<text x="628" y="568" font-family="Geist" font-size="18" fill="#9C9A93"><tspan font-weight="600" fill="#F4F2EC">Bundle &amp; sniper</tspan> detection</text>
+<g transform="translate(604,597)" fill="none" stroke="#5CDD94" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M0 5 L4 9 L11 0"/></g>
+<text x="628" y="608" font-family="Geist" font-size="18" fill="#9C9A93"><tspan font-weight="600" fill="#F4F2EC">Ghost Match</tspan> + funding trace</text>
+<g transform="translate(604,637)" fill="none" stroke="#5CDD94" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M0 5 L4 9 L11 0"/></g>
+<text x="628" y="648" font-family="Geist" font-size="18" fill="#9C9A93"><tspan font-weight="600" fill="#F4F2EC">Custom</tspan> dev watchlists</text>
+<rect x="604" y="766" width="392" height="54" rx="27" fill="url(#goldbtn)"/>
+<text x="800" y="800" text-anchor="middle" font-family="Geist Mono" font-weight="600" font-size="15" letter-spacing="2" fill="#1A1305">GO OPERATOR</text>
+  <rect x="1060" y="274" width="460" height="566" rx="22" fill="url(#cardbg)" stroke="rgba(255,255,255,0.16)"/>
+<text x="1094" y="330" font-family="Geist Mono" font-weight="600" font-size="15" letter-spacing="3.5" fill="#9C9A93">SYNDICATE</text>
+<text x="1094" y="390" font-family="Geist" font-weight="700" font-size="52" letter-spacing="-1.5" fill="#F4F2EC">8 SOL<tspan font-family="Geist Mono" font-weight="500" font-size="15" letter-spacing="1" fill="#5F5D58">  / MONTH</tspan></text>
+<text x="1094" y="424" font-family="Geist" font-weight="400" font-size="16" fill="#9C9A93">For groups, bots and builders.</text>
+<line x1="1094" y1="450" x2="1486" y2="450" stroke="#F4F2EC" stroke-opacity="0.08"/>
+<g transform="translate(1094,477)" fill="none" stroke="#E2B65B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M0 5 L4 9 L11 0"/></g>
+<text x="1118" y="488" font-family="Geist" font-size="18" fill="#9C9A93"><tspan font-weight="600" fill="#F4F2EC">Everything</tspan> in Operator</text>
+<g transform="translate(1094,517)" fill="none" stroke="#E2B65B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M0 5 L4 9 L11 0"/></g>
+<text x="1118" y="528" font-family="Geist" font-size="18" fill="#9C9A93"><tspan font-weight="600" fill="#F4F2EC">API</tspan> + webhooks</text>
+<g transform="translate(1094,557)" fill="none" stroke="#E2B65B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M0 5 L4 9 L11 0"/></g>
+<text x="1118" y="568" font-family="Geist" font-size="18" fill="#9C9A93"><tspan font-weight="600" fill="#F4F2EC">5 seats</tspan> included</text>
+<g transform="translate(1094,597)" fill="none" stroke="#E2B65B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M0 5 L4 9 L11 0"/></g>
+<text x="1118" y="608" font-family="Geist" font-size="18" fill="#9C9A93"><tspan font-weight="600" fill="#F4F2EC">Priority</tspan> trace queue</text>
+<g transform="translate(1094,637)" fill="none" stroke="#E2B65B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M0 5 L4 9 L11 0"/></g>
+<text x="1118" y="648" font-family="Geist" font-size="18" fill="#9C9A93"><tspan font-weight="600" fill="#F4F2EC">Direct line</tspan> to the team</text>
+<rect x="1094" y="766" width="392" height="54" rx="27" fill="none" stroke="rgba(255,255,255,0.16)"/>
+<text x="1290" y="800" text-anchor="middle" font-family="Geist Mono" font-weight="500" font-size="14" letter-spacing="2" fill="#F4F2EC">REQUEST ACCESS</text>
+</svg>
