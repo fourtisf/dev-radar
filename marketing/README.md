@@ -10,6 +10,9 @@ Social/promo assets for DevRadar. Brand is ported from `reference/devradar-site.
 - `fonts/` — Geist Sans + Geist Mono (OFL) used for rendering. Geist stands in
   for the site's Clash Display / Switzer, which aren't open-download.
 
+Brand mark is the gold eye logo (vector, redrawn so it scales crisply). Socials:
+X [@DevRadarS](https://x.com/DevRadarS) · Telegram [t.me/devradars](https://t.me/devradars).
+
 ### Regenerate
 
 ```bash
@@ -22,4 +25,6 @@ node build-banner.js    # writes devradar-x-banner.{svg,png}
 
 > Every dev has a record. Most people read it *after* the rug.
 > DevRadar compiles it in under 2 seconds — launches, rugs, bundles, funding —
-> before your entry. Know the dev before you ape. → devradar.org
+> before your entry. Know the dev before you ape.
+>
+> Follow → x.com/DevRadarS · Alerts → t.me/devradars

@@ -66,17 +66,14 @@ const svg = `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http
   <rect width="${W}" height="${H}" filter="url(#grain)" opacity="0.05"/>
 
   <!-- ── top bar ──────────────────────────────────────────────── -->
-  <!-- radar glyph -->
-  <g transform="translate(96,84)">
-    <circle r="22" fill="${C.gold}" fill-opacity="0.06" stroke="${C.gold}" stroke-opacity="0.35"/>
-    <circle r="13" fill="none" stroke="${C.gold}" stroke-opacity="0.22"/>
-    <path d="M0 0 L19 -10 A22 22 0 0 1 19 10 Z" fill="url(#sweep)" opacity="0.65"/>
-    <line x1="-22" y1="0" x2="22" y2="0" stroke="${C.gold}" stroke-opacity="0.14"/>
-    <line x1="0" y1="-22" x2="0" y2="22" stroke="${C.gold}" stroke-opacity="0.14"/>
-    <circle r="3" fill="${C.goldHi}" filter="url(#soft)"/>
-    <circle r="2.6" fill="${C.goldHi}"/>
+  <!-- eye logo (brand mark) -->
+  <g transform="translate(122,84) scale(0.30)">
+    <path d="M -100 0 C -55 -42 55 -42 100 0 C 55 42 -55 42 -100 0 Z" fill="none" stroke="url(#goldbtn)" stroke-width="11" stroke-linejoin="round"/>
+    <circle r="40" fill="${C.gold}" fill-opacity="0.06" stroke="url(#goldbtn)" stroke-width="6" stroke-opacity="0.7"/>
+    <circle r="27" fill="url(#goldbtn)"/>
+    <circle cx="11" cy="-11" r="7" fill="${C.black}"/>
   </g>
-  <text x="134" y="93" font-family="Geist" font-weight="600" font-size="27" letter-spacing="3" fill="${C.white}">DEV<tspan fill="${C.gold}">RADAR</tspan></text>
+  <text x="164" y="93" font-family="Geist" font-weight="600" font-size="27" letter-spacing="3" fill="${C.white}">DEV<tspan fill="${C.gold}">RADAR</tspan></text>
   <text x="${W-96}" y="91" text-anchor="end" font-family="Geist Mono" font-weight="500" font-size="15" letter-spacing="2.5" fill="${C.grey}">DEPLOYER INTELLIGENCE <tspan fill="${C.gold}">·</tspan> SOLANA</text>
 
   <!-- top hairline -->
@@ -103,11 +100,23 @@ const svg = `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http
     <text x="96" y="680" fill="${C.grey}"><tspan fill="${C.white}">184,302</tspan> indexed   <tspan fill="${C.grey2}">·</tspan>   <tspan fill="${C.rug}">61,448</tspan> rugs flagged   <tspan fill="${C.grey2}">·</tspan>   <tspan fill="${C.win}">1.8s</tspan> median trace</text>
   </g>
 
-  <!-- CTA -->
-  <rect x="96" y="724" width="290" height="58" rx="29" fill="url(#goldbtn)"/>
-  <text x="241" y="761" text-anchor="middle" font-family="Geist Mono" font-weight="600" font-size="16" letter-spacing="2" fill="#1A1305">TRACE ANY WALLET</text>
-  <rect x="402" y="724" width="250" height="58" rx="29" fill="none" stroke="${C.hair2}"/>
-  <text x="527" y="761" text-anchor="middle" font-family="Geist Mono" font-weight="500" font-size="15" letter-spacing="1.5" fill="${C.white}">devradar.org</text>
+  <!-- CTA + socials -->
+  <rect x="96" y="724" width="270" height="58" rx="29" fill="url(#goldbtn)"/>
+  <text x="231" y="761" text-anchor="middle" font-family="Geist Mono" font-weight="600" font-size="16" letter-spacing="2" fill="#1A1305">TRACE ANY WALLET</text>
+
+  <!-- X / Twitter -->
+  <rect x="382" y="724" width="248" height="58" rx="29" fill="none" stroke="${C.hair2}"/>
+  <g transform="translate(414,742) scale(0.83)" fill="${C.gold}">
+    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.66l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+  </g>
+  <text x="446" y="760" font-family="Geist Mono" font-weight="500" font-size="15" letter-spacing="1" fill="${C.white}">@DevRadarS</text>
+
+  <!-- Telegram -->
+  <rect x="646" y="724" width="300" height="58" rx="29" fill="none" stroke="${C.hair2}"/>
+  <g transform="translate(680,743) scale(0.92)" fill="${C.gold}">
+    <path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71L12.6 16.3l-1.99 1.93c-.23.23-.42.42-.83.42z"/>
+  </g>
+  <text x="712" y="760" font-family="Geist Mono" font-weight="500" font-size="15" letter-spacing="1" fill="${C.white}">t.me/devradars</text>
 
   <!-- ── dossier alert card (right) ──────────────────────────── -->
   <g transform="translate(978,236)">
