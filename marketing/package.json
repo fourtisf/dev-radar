@@ -1,0 +1,15 @@
+{
+  "name": "marketing",
+  "version": "1.0.0",
+  "description": "Social/promo assets for DevRadar. Brand is ported from `reference/devradar-site.html` (gold `#E2B65B` on near-black `#060607`), never redesigned.",
+  "main": "build-banner.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@resvg/resvg-js": "^2.6.2"
+  }
+}

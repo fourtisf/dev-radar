@@ -1,0 +1,133 @@
+<svg width="1600" height="900" viewBox="0 0 1600 900" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="goldtx" x1="0" y1="0" x2="1" y2="0.35">
+      <stop offset="0" stop-color="#F4D789"/>
+      <stop offset="0.5" stop-color="#E2B65B"/>
+      <stop offset="1" stop-color="#B9893A"/>
+    </linearGradient>
+    <linearGradient id="goldbtn" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#F4D789"/>
+      <stop offset="0.55" stop-color="#E2B65B"/>
+      <stop offset="1" stop-color="#B9893A"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#E2B65B" stop-opacity="0.20"/>
+      <stop offset="1" stop-color="#E2B65B" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="sweep" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#E2B65B" stop-opacity="0"/>
+      <stop offset="1" stop-color="#E2B65B" stop-opacity="0.85"/>
+    </radialGradient>
+    <linearGradient id="cardbg" x1="0" y1="0" x2="0.4" y2="1">
+      <stop offset="0" stop-color="#121216"/>
+      <stop offset="1" stop-color="#0B0B0E"/>
+    </linearGradient>
+    <filter id="soft" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="6"/>
+    </filter>
+    <filter id="grain">
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch"/>
+      <feColorMatrix type="saturate" values="0"/>
+    </filter>
+  </defs>
+
+  <!-- base -->
+  <rect width="1600" height="900" fill="#060607"/>
+  <!-- ambient gold glow top-right -->
+  <rect x="780" y="-260" width="1080" height="1080" fill="url(#glow)"/>
+
+  <!-- radar rings behind card -->
+  <g stroke="#E2B65B" fill="none">
+    <circle cx="1245" cy="470" r="150" stroke-opacity="0.10"/>
+    <circle cx="1245" cy="470" r="250" stroke-opacity="0.07"/>
+    <circle cx="1245" cy="470" r="360" stroke-opacity="0.05"/>
+    <circle cx="1245" cy="470" r="480" stroke-opacity="0.035"/>
+  </g>
+
+  <!-- grain overlay -->
+  <rect width="1600" height="900" filter="url(#grain)" opacity="0.05"/>
+
+  <!-- ── top bar ──────────────────────────────────────────────── -->
+  <!-- radar glyph -->
+  <g transform="translate(96,84)">
+    <circle r="22" fill="#E2B65B" fill-opacity="0.06" stroke="#E2B65B" stroke-opacity="0.35"/>
+    <circle r="13" fill="none" stroke="#E2B65B" stroke-opacity="0.22"/>
+    <path d="M0 0 L19 -10 A22 22 0 0 1 19 10 Z" fill="url(#sweep)" opacity="0.65"/>
+    <line x1="-22" y1="0" x2="22" y2="0" stroke="#E2B65B" stroke-opacity="0.14"/>
+    <line x1="0" y1="-22" x2="0" y2="22" stroke="#E2B65B" stroke-opacity="0.14"/>
+    <circle r="3" fill="#F4D789" filter="url(#soft)"/>
+    <circle r="2.6" fill="#F4D789"/>
+  </g>
+  <text x="134" y="93" font-family="Geist" font-weight="600" font-size="27" letter-spacing="3" fill="#F4F2EC">DEV<tspan fill="#E2B65B">RADAR</tspan></text>
+  <text x="1504" y="91" text-anchor="end" font-family="Geist Mono" font-weight="500" font-size="15" letter-spacing="2.5" fill="#9C9A93">DEPLOYER INTELLIGENCE <tspan fill="#E2B65B">·</tspan> SOLANA</text>
+
+  <!-- top hairline -->
+  <line x1="96" y1="138" x2="1504" y2="138" stroke="#F4F2EC" stroke-opacity="0.08"/>
+
+  <!-- ── left column ─────────────────────────────────────────── -->
+  <!-- kicker -->
+  <circle cx="102" cy="243" r="4.5" fill="#E2B65B"/>
+  <text x="118" y="249" font-family="Geist Mono" font-weight="500" font-size="16" letter-spacing="3.5" fill="#E2B65B">PUMP.FUN DEPLOYER RADAR</text>
+
+  <!-- headline -->
+  <text x="93" y="360" font-family="Geist" font-weight="700" font-size="92" letter-spacing="-2.5" fill="#F4F2EC">Know the dev</text>
+  <text x="93" y="452" font-family="Geist" font-weight="700" font-size="92" letter-spacing="-2.5" fill="#F4F2EC">before <tspan fill="url(#goldtx)">you ape.</tspan></text>
+
+  <!-- subhead -->
+  <g font-family="Geist" font-weight="400" font-size="24" fill="#9C9A93">
+    <text x="96" y="532">Every deployer wallet carries a record — launches, rugs,</text>
+    <text x="96" y="568">bundles, funding. DevRadar compiles it into one dossier</text>
+    <text x="96" y="604">in under two seconds. <tspan fill="#F4F2EC">Before your entry, not after.</tspan></text>
+  </g>
+
+  <!-- stats -->
+  <g font-family="Geist Mono" font-weight="500" font-size="17" letter-spacing="0.5">
+    <text x="96" y="680" fill="#9C9A93"><tspan fill="#F4F2EC">184,302</tspan> indexed   <tspan fill="#5F5D58">·</tspan>   <tspan fill="#F2555C">61,448</tspan> rugs flagged   <tspan fill="#5F5D58">·</tspan>   <tspan fill="#5CDD94">1.8s</tspan> median trace</text>
+  </g>
+
+  <!-- CTA -->
+  <rect x="96" y="724" width="290" height="58" rx="29" fill="url(#goldbtn)"/>
+  <text x="241" y="761" text-anchor="middle" font-family="Geist Mono" font-weight="600" font-size="16" letter-spacing="2" fill="#1A1305">TRACE ANY WALLET</text>
+  <rect x="402" y="724" width="250" height="58" rx="29" fill="none" stroke="rgba(255,255,255,0.16)"/>
+  <text x="527" y="761" text-anchor="middle" font-family="Geist Mono" font-weight="500" font-size="15" letter-spacing="1.5" fill="#F4F2EC">devradar.org</text>
+
+  <!-- ── dossier alert card (right) ──────────────────────────── -->
+  <g transform="translate(978,236)">
+    <rect width="526" height="430" rx="22" fill="url(#cardbg)" stroke="rgba(255,255,255,0.16)"/>
+    <rect width="526" height="430" rx="22" fill="none" stroke="#E2B65B" stroke-opacity="0.10"/>
+
+    <!-- header -->
+    <circle cx="40" cy="50" r="5" fill="#E2B65B" filter="url(#soft)"/>
+    <circle cx="40" cy="50" r="4.5" fill="#F4D789"/>
+    <text x="56" y="56" font-family="Geist Mono" font-weight="600" font-size="15" letter-spacing="1.8" fill="#E2B65B">PROVEN DEPLOYER LIVE</text>
+    <circle cx="442" cy="50" r="4" fill="#5CDD94"/>
+    <text x="486" y="55" text-anchor="end" font-family="Geist Mono" font-weight="500" font-size="12" letter-spacing="1.5" fill="#5CDD94">LIVE</text>
+
+    <!-- token -->
+    <text x="40" y="106" font-family="Geist" font-weight="600" font-size="30" fill="#E2B65B">$NORTH <tspan font-weight="400" font-size="22" fill="#F4F2EC">— North Road Dog</tspan></text>
+
+    <line x1="40" y1="134" x2="486" y2="134" stroke="#F4F2EC" stroke-opacity="0.08"/>
+
+    <!-- record -->
+    <g font-family="Geist" font-size="20">
+      <text x="40" y="178" fill="#9C9A93">Dev <tspan font-family="Geist Mono" font-size="18" fill="#F4F2EC">7xKp····9fQm</tspan>  <tspan fill="#5F5D58">·</tspan>  <tspan fill="#5CDD94" font-weight="500">Serial Winner</tspan></text>
+      <text x="40" y="216" fill="#9C9A93"><tspan fill="#F4F2EC">14</tspan> launches  <tspan fill="#5F5D58">·</tspan>  <tspan fill="#F4F2EC">0</tspan> rugs  <tspan fill="#5F5D58">·</tspan>  best ATH <tspan fill="#F4F2EC">$4.2M</tspan></text>
+      <text x="40" y="254" fill="#9C9A93">Bundle <tspan fill="#F4F2EC">4.1%</tspan>  <tspan fill="#5F5D58">·</tspan>  Snipers <tspan fill="#5CDD94">low</tspan></text>
+    </g>
+
+    <!-- DR score badge -->
+    <g transform="translate(486,210)">
+      <circle r="50" cx="-50" cy="0" fill="#5CDD94" fill-opacity="0.06" stroke="#5CDD94" stroke-opacity="0.35"/>
+      <text x="-50" y="6" text-anchor="middle" font-family="Geist" font-weight="700" font-size="40" fill="#5CDD94">92</text>
+      <text x="-50" y="32" text-anchor="middle" font-family="Geist Mono" font-weight="500" font-size="10" letter-spacing="2" fill="#5F5D58">DR SCORE</text>
+    </g>
+
+    <line x1="40" y1="300" x2="486" y2="300" stroke="#F4F2EC" stroke-opacity="0.08"/>
+
+    <!-- links -->
+    <text x="40" y="338" font-family="Geist Mono" font-weight="400" font-size="15" letter-spacing="0.5" fill="#E2B65B">dossier  <tspan fill="#5F5D58">·</tspan>  chart  <tspan fill="#5F5D58">·</tspan>  dev history</text>
+
+    <!-- delivered note -->
+    <text x="40" y="390" font-family="Geist" font-size="15" fill="#5F5D58">Delivered <tspan fill="#9C9A93" font-weight="500">1.8s</tspan> after deploy — before your buy would confirm.</text>
+  </g>
+</svg>
